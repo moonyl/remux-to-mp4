@@ -30,3 +30,17 @@
 *.exe
 *.out
 *.app
+
+out/build/x64-Debug/.cmake/api/v1/query/client-MicrosoftVS/
+
+out/build/x64-Debug/.cmake/api/v1/reply/
+
+out/build/x64-Debug/
+
+.vs/remux-to-mp4/v16/
+
+.vs/remux-to-mp4/config/
+
+*.sqlite
+
+.vs/VSWorkspaceState.json
