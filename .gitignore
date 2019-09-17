@@ -44,3 +44,5 @@ out/build/x64-Debug/
 *.sqlite
 
 .vs/VSWorkspaceState.json
+
+enc_temp_folder/

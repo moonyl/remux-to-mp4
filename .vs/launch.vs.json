@@ -6,7 +6,7 @@
       "type": "default",
       "project": "CMakeLists.txt",
       "name": "ffmpeg_remux",
-      "env": "PATH=${projectDir}\\third-party\\ffmpeg-20190826-0821bc4-win64\\bin;${env.PATH}"
+      "env": "PATH=${env.QT_ROOT}\\bin;${projectDir}\\third-party\\ffmpeg-20190826-0821bc4-win64\\bin;${env.PATH}"
     }
   ]
 }
