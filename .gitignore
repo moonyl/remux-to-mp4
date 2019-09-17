@@ -46,3 +46,11 @@ out/build/x64-Debug/
 .vs/VSWorkspaceState.json
 
 enc_temp_folder/
+
+stream-server/.vs/remux-to-mp4/config/
+
+stream-server/.vs/remux-to-mp4/v16/
+
+stream-server/.vs/stream-server/v16/
+
+stream-server/.vs/VSWorkspaceState.json
