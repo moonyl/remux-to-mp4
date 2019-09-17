@@ -44,8 +44,6 @@ add_executable(ffmpeg_remux
 	RemuxIntermediate.h
 	RemuxResourceContext.cpp
 	RemuxResourceContext.h	
-	remuxStreamToMP4.cpp
-	remuxStreamToMP4.h
 	StreamSetupCommunicator.h
 	utils.c
 	WebSocketServer.cpp
