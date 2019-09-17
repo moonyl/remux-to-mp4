@@ -54,3 +54,6 @@ stream-server/.vs/remux-to-mp4/v16/
 stream-server/.vs/stream-server/v16/
 
 stream-server/.vs/VSWorkspaceState.json
+
+web-stream-app/node_modules/
+web-ui/debug.log
