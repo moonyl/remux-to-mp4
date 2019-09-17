@@ -5,8 +5,11 @@
 #include <iostream>
 #include <QRegularExpression>
 #include <QUuid>
+#include "StreamSetupCommunicator.h"
 
 class QWebSocket;
+
+
 
 class Mp4RemuxManager : public QObject
 {
@@ -14,9 +17,10 @@ class Mp4RemuxManager : public QObject
 
 	QMap<QUuid, QSharedPointer<RemuxingContext>> _remuxerMap;
 	QTimer _timer;
-
+	StreamSetupCommunicator _communicator;
+	
 public:
-	Mp4RemuxManager(QObject* parent = nullptr) : QObject(parent)//, _remuxer(in_filename)
+	Mp4RemuxManager(QObject* parent = nullptr) : QObject(parent), _communicator(this)
 	{
 		_timer.setInterval(0);
 		connect(&_timer, &QTimer::timeout, [this]() {
@@ -32,7 +36,7 @@ public:
 
 		});
 	}
-
+	   	
 	void addSocket(QWebSocket* socket)
 	{
 		QRegularExpression re("/livews/(\\s*([a-f0-9\\-]*){1}\\s*)/*");
@@ -40,16 +44,16 @@ public:
 		if (match.hasMatch()) {
 			auto cameraId = match.captured(1);
 			std::cout << "camera ID: " << qPrintable(cameraId) << std::endl;
-			// TODO : 서버로부터 URL과 계정 정보를 얻어온 후, RemuxingContext 를 생성한다.
+						
 			if (!_remuxerMap.contains(cameraId)) {
-				QSharedPointer<RemuxingContext> remuxer(new RemuxingContext("rtsp://192.168.15.11/Apink_I'mSoSick_720_2000kbps.mp4"));
-				//_remuxer.addSocket(socket);
-				remuxer->addSocket(socket);
-				_remuxerMap[cameraId] = remuxer;
-				connect(socket, &QWebSocket::textMessageReceived, this, &Mp4RemuxManager::handleTextMessageReceived);
-				connect(socket, &QWebSocket::disconnected, this, &Mp4RemuxManager::handleDisconnected);
+				_communicator.makeRemuxContext(cameraId, socket);
+				connect(&_communicator, &StreamSetupCommunicator::created, [this](const QString& cameraId, QSharedPointer<RemuxingContext> context)
+					{
+						_remuxerMap[cameraId] = context;
+					});
 			}
-
+			connect(socket, &QWebSocket::textMessageReceived, this, &Mp4RemuxManager::handleTextMessageReceived);
+			connect(socket, &QWebSocket::disconnected, this, &Mp4RemuxManager::handleDisconnected);
 		}		
 	}
 

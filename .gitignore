@@ -57,3 +57,5 @@ stream-server/.vs/VSWorkspaceState.json
 
 web-stream-app/node_modules/
 web-ui/debug.log
+
+web-stream-app/yarn-error.log
