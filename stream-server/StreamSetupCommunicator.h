@@ -5,8 +5,8 @@
 #include <QJsonObject>
 #include <QLocalSocket>
 #include <QQueue>
-#include <QWebSocket>
 #include "RemuxingContext.h"
+#include <iostream>
 
 class StreamSetupCommunicator : public QObject
 {
@@ -15,17 +15,15 @@ class StreamSetupCommunicator : public QObject
 		QLocalSocket _setupClient;
 
 	class RemuxingContextBuilder
-	{
-		QWebSocket* _socket;
+	{		
 		QString _cameraId;
 	public:
-		RemuxingContextBuilder(QWebSocket* socket, const QString& cameraId) : _socket(socket), _cameraId(cameraId) {}
+		RemuxingContextBuilder(const QString& cameraId) : _cameraId(cameraId) {}
 		~RemuxingContextBuilder() { std::cout << __FUNCTION__ << std::endl; }
 		QSharedPointer<RemuxingContext> build(const QUrl& url)
 		{
-			QSharedPointer<RemuxingContext> remuxer(new RemuxingContext(qPrintable(url.toString())));
-			// 	//_remuxer.addSocket(socket);
-			remuxer->addSocket(_socket);
+			std::cout << "check: " << qPrintable(url.toString(QUrl::None)) << std::endl;
+			QSharedPointer<RemuxingContext> remuxer(new RemuxingContext(qPrintable(url.toString(QUrl::None))));
 			return remuxer;
 		}
 		QString cameraId() const { return _cameraId; }
@@ -55,9 +53,9 @@ public:
 			});
 		connect(&_setupClient, &QLocalSocket::readyRead, [this]()
 			{
-				//std::cout << qPrintable(_setupClient.readAll());
-				//auto received = _setupClient.readAll();
-				QString url;
+				QUrl url;
+				QString user;
+				QString password;
 				auto doc = QJsonDocument::fromJson(_setupClient.readAll());
 				if (doc.isObject()) {
 					auto reply = doc.object();
@@ -65,27 +63,34 @@ public:
 						auto result = reply["result"];
 						if (result.isObject()) {
 							url = result.toObject()["url"].toString();
-							std::cout << "url: " << qPrintable(url) << std::endl;
+							//std::cout << "url: " << qPrintable(url) << std::endl;
+							user = result.toObject()["user"].isString() ? result.toObject()["user"].toString() : "";
+							password = result.toObject()["password"].isString() ? result.toObject()["password"].toString() : "";
+							std::cout << "user: " << qPrintable(user) << ", password: " << qPrintable(password) << std::endl;
 						}
 					}
 				}
 
 				auto builder = _requested.dequeue();
+				if (!user.isEmpty()) {
+					url.setUserName(user);
+					url.setPassword(password);
+				}
 				auto remuxer = builder->build(url);
+			
 				std::cout << "check, camera ID: " << qPrintable(builder->cameraId()) << std::endl;
-				//_remuxerMap[builder->cameraId()] = remuxer;
 				emit created(builder->cameraId(), remuxer);
 			});
 		_setupClient.connectToServer("WebStreamApp");
 	}
 
-	void makeRemuxContext(const QString& cameraId, QWebSocket* socket)
+	void makeRemuxContext(const QString& cameraId)
 	{
 		auto request = QJsonDocument(QJsonObject{
 			{"cmd", "stream"},
 			{"param", QJsonObject{ {"id", cameraId}} }
 			}).toJson();
 			_setupClient.write(request);
-			_requested.enqueue(QSharedPointer<RemuxingContextBuilder>(new RemuxingContextBuilder{ socket, cameraId }));
+			_requested.enqueue(QSharedPointer<RemuxingContextBuilder>(new RemuxingContextBuilder{ cameraId }));
 	}
 };

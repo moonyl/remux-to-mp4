@@ -2,7 +2,18 @@
 #include "RemuxedOutput.h"
 #include "RemuxResourceContext.h"
 
-void HeaderGenerater::makeHeader(const char* in_filename, QWebSocket* socket)
+
+void copyCodecParameter(AVCodecParameters* dst, AVCodecParameters* src)
+{
+	int ret = avcodec_parameters_copy(dst, src);
+	if (ret < 0) {
+		throw EXCEPTION_MESSAGE(Exception, ret, "Failed to copy codec parameters");
+	}
+	dst->codec_tag = 0;
+}
+
+//void HeaderGenerater::makeHeader(const char* in_filename, QWebSocket* socket)
+QByteArray HeaderGenerater::makeHeader(const char* in_filename)
 {
 	_resource.openInput(in_filename);
 	AVFormatContext* ifmtCtx = _resource.inputFormatContext();
@@ -27,26 +38,32 @@ void HeaderGenerater::makeHeader(const char* in_filename, QWebSocket* socket)
 		AVCodecParameters* in_codecpar = in_stream->codecpar;
 		if (in_codecpar->codec_type != AVMEDIA_TYPE_AUDIO &&
 			in_codecpar->codec_type != AVMEDIA_TYPE_VIDEO &&
-			in_codecpar->codec_type != AVMEDIA_TYPE_SUBTITLE) {
+			in_codecpar->codec_type != AVMEDIA_TYPE_SUBTITLE
+			) {
 			streamMapping[i] = -1;
 			continue;
 		}
+		
 		streamMapping[i] = stream_index++;
-		out_stream = avformat_new_stream(ofmtCtx, NULL);
+
+		out_stream = avformat_new_stream(ofmtCtx, nullptr);
 		if (!out_stream) {
 			throw EXCEPTION_MESSAGE(Exception, ret, "Failed allocating output stream");
 		}
-		ret = avcodec_parameters_copy(out_stream->codecpar, in_codecpar);
-		if (ret < 0) {
-			throw EXCEPTION_MESSAGE(Exception, ret, "Failed to copy codec parameters");
-		}
-		out_stream->codecpar->codec_tag = 0;
+		
+		if (in_codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+			bool needTranscoding = _resource.allocTranscodingResources(in_codecpar, out_stream);
+			if (!needTranscoding) {
+				copyCodecParameter(out_stream->codecpar, in_codecpar);
+			}
+		} else {
+			copyCodecParameter(out_stream->codecpar, in_codecpar);
+		}		
 	}
-
-
+	
 	_resource.assignRemuxedOutput();
 	RemuxedOutput& remuxedOut = _resource.remuxedOutput();
-	remuxedOut.setSink(socket);
+	//remuxedOut.setSink(socket);
 	if (!(ofmtCtx->flags & AVFMT_NOFILE)) {
 		ret = remuxedOut.open();
 
@@ -82,5 +99,5 @@ void HeaderGenerater::makeHeader(const char* in_filename, QWebSocket* socket)
 		throw EXCEPTION_MESSAGE(Exception, ret, "Error occurred when opening output file");
 	}
 
-	remuxedOut.update();
+	return remuxedOut.update();
 }

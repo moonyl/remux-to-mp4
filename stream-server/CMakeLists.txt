@@ -54,6 +54,7 @@ target_link_libraries(ffmpeg_remux PRIVATE
         ${avformat_LIB}
         ${avutil_LIB}
         ${avcodec_LIB}
+		${swresample_LIB}
 		Qt5::Core
 		Qt5::WebSockets
 		Qt5::Concurrent

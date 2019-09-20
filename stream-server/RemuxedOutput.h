@@ -12,10 +12,10 @@ class RemuxedOutputStrategy
 public:
 	RemuxedOutputStrategy(AVIOContext** pb)  : _pb(pb) {}
 	virtual int open() = 0;
-	virtual void update() = 0;
-	virtual void close() = 0;
+	virtual QByteArray update() = 0;
+	virtual QByteArray close() = 0;
 	// TODO: QWebSocket의 abstraction이 필요하다.
-	virtual void setSink(QWebSocket* socket) {}
+	//virtual void setSink(QWebSocket* socket) {}
 
 protected:
 	AVIOContext** _pb;
@@ -24,9 +24,9 @@ protected:
 #include <QWebSocket>
 class DynBufferOutputStrategy : public RemuxedOutputStrategy
 {
-	QWebSocket* _socket;
+	//QWebSocket* _socket;
 public:
-	DynBufferOutputStrategy(AVIOContext** pb, QWebSocket* socket) : RemuxedOutputStrategy(pb), _socket(socket)
+	DynBufferOutputStrategy(AVIOContext** pb, QWebSocket* socket) : RemuxedOutputStrategy(pb)//, _socket(socket)
 	{
 		
 	}
@@ -36,16 +36,17 @@ public:
 		return avio_open_dyn_buf(_pb);
 	}
 	
-	void update()
+	QByteArray update()
 	{
 		uint8_t* buf;
 		int bufSize = avio_get_dyn_buf(*_pb, &buf);
 		if (bufSize) {
 			int dynBufSize = avio_close_dyn_buf(*_pb, &buf);
 
-			if (_socket) {
-				_socket->sendBinaryMessage(QByteArray((const char*)buf, bufSize));
-			}
+			QByteArray result((const char*)buf, bufSize);
+			// if (_socket) {
+			// 	_socket->sendBinaryMessage(QByteArray((const char*)buf, bufSize));
+			// }
 
 			av_freep(&buf);
 
@@ -54,33 +55,28 @@ public:
 			if (ret < 0) {
 				fprintf(stderr, "Error occurred when opening output file\n");
 			}
+			return result;
 		}
+		return QByteArray();
 	}
 	
-	void close()
+	QByteArray close()
 	{
 		uint8_t* buf;
 		int bufSize = avio_get_dyn_buf(*_pb, &buf);
 		if (bufSize) {
 			int dynBufSize = avio_close_dyn_buf(*_pb, &buf);
 
-			if (_socket) {
-				_socket->sendBinaryMessage(QByteArray((const char*)buf, bufSize));
-			}
+			QByteArray result((const char*)buf, bufSize);
 
 			av_freep(&buf);
 			*_pb = nullptr;
+
+			return result;
 		}
+		return QByteArray();
 	}
 
-	void setSink(QWebSocket* socket)
-	{
-		_socket = socket;
-		QObject::connect(socket, &QWebSocket::disconnected, [this]()
-			{
-				_socket = nullptr;
-			});
-	}
 };
 
 class AvioOutputStrategy : public RemuxedOutputStrategy
@@ -96,14 +92,16 @@ public:
 		return avio_open(_pb, "result.mp4", AVIO_FLAG_WRITE);
 	}
 	
-	void update()
+	QByteArray update()
 	{
+		return QByteArray();
 		// nothing to do
 	}
 	
-	void close()
-	{
+	QByteArray close()
+	{		
 		avio_closep(_pb);
+		return QByteArray();
 	}
 };
 
@@ -128,23 +126,18 @@ public:
 		_outputHandler.reset(new AvioOutputStrategy(pb));		
 	}
 
-	void setSink(QWebSocket* socket)
-	{
-		_outputHandler->setSink(socket);
-	}
-
 	int open()
 	{
 		return _outputHandler->open();
 	}
 
-	void update()
+	QByteArray update()
 	{
-		_outputHandler->update();
+		return _outputHandler->update();
 	}
 
-	void close()
+	QByteArray close()
 	{
-		_outputHandler->close();
+		return _outputHandler->close();
 	}
 };

@@ -14,12 +14,9 @@ public:
 
 private slots:
 	void handleNewConnect();
-	//void handleDisconnect();
-	//void handleTextMessage(const QString& message);
 	
 private:	
 	QWebSocketServer _socketServer;
-	//QWebSocket* _socket;
 
 	Mp4RemuxManager _remuxer;
 };

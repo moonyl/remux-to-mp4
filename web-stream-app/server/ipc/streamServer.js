@@ -17,8 +17,8 @@ const StreamServerHandlers = {
             return;
           }
           console.log({ data });
-          const { url } = data;
-          socket.write(JSON.stringify({ state: "OK", result: { url } }), err => {
+          const { url, user, password } = data;
+          socket.write(JSON.stringify({ state: "OK", result: { url, user, password } }), err => {
             if (err) {
               console.error(err);
               return;

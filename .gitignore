@@ -59,3 +59,10 @@ web-stream-app/node_modules/
 web-ui/debug.log
 
 web-stream-app/yarn-error.log
+
+stream-server/.vs/stream-server/config/applicationhost.config
+
+stream-server/out/build/x64-Debug/.cmake/api/v1/query/client-MicrosoftVS/query.json
+
+stream-server/out/
+web-stream-app/debug.log

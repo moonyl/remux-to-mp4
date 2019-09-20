@@ -24,19 +24,24 @@ public:
 	{
 		_timer.setInterval(0);
 		connect(&_timer, &QTimer::timeout, [this]() {
+			QList<QUuid> tobeRemoved;
 			for(const auto& key : _remuxerMap.keys()) {
-				bool working = _remuxerMap[key]->remux();
-				if (!working) {
-					_remuxerMap.remove(key);
+				auto result = _remuxerMap[key]->remux();
+				_remuxerMap[key]->sendRemuxed(result);
+				if (_remuxerMap[key]->isStreamEnded()) {
+					tobeRemoved << key;
 				}
 			}
+			for (const auto&key : tobeRemoved) {
+				_remuxerMap.remove(key);
+			}			
+			
 			if (_remuxerMap.isEmpty()) {
 				_timer.stop();
-			}		
-
+			}
 		});
 	}
-	   	
+
 	void addSocket(QWebSocket* socket)
 	{
 		QRegularExpression re("/livews/(\\s*([a-f0-9\\-]*){1}\\s*)/*");
@@ -44,17 +49,18 @@ public:
 		if (match.hasMatch()) {
 			auto cameraId = match.captured(1);
 			std::cout << "camera ID: " << qPrintable(cameraId) << std::endl;
-						
+
 			if (!_remuxerMap.contains(cameraId)) {
-				_communicator.makeRemuxContext(cameraId, socket);
-				connect(&_communicator, &StreamSetupCommunicator::created, [this](const QString& cameraId, QSharedPointer<RemuxingContext> context)
-					{
-						_remuxerMap[cameraId] = context;
-					});
+				_communicator.makeRemuxContext(cameraId);
+				connect(&_communicator, &StreamSetupCommunicator::created, [this, socket](const QString& cameraId, QSharedPointer<RemuxingContext> context)
+				{
+					context->addSocket(socket);
+					_remuxerMap[cameraId] = context;
+				});
 			}
 			connect(socket, &QWebSocket::textMessageReceived, this, &Mp4RemuxManager::handleTextMessageReceived);
 			connect(socket, &QWebSocket::disconnected, this, &Mp4RemuxManager::handleDisconnected);
-		}		
+		}
 	}
 
 private slots:

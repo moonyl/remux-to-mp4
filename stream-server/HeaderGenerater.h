@@ -16,5 +16,6 @@ class HeaderGenerater
 public:
 	HeaderGenerater(RemuxResourceContext& resource) : _resource(resource) {}
 
-	void makeHeader(const char* in_filename, QWebSocket* socket);
+	//void makeHeader(const char* in_filename, QWebSocket* socket);
+	QByteArray makeHeader(const char* in_filename);
 };
