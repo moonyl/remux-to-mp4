@@ -3,7 +3,9 @@
 #include <iostream>
 
 
-WebSocketServer::WebSocketServer(QObject* parent): QObject(parent),
+WebSocketServer::WebSocketServer(WebSocketRouter& router, QObject* parent) :
+	QObject(parent),
+	_router(router),
     _socketServer("Websocket Server", QWebSocketServer::NonSecureMode)
 {
 	_socketServer.close();
@@ -18,5 +20,5 @@ void WebSocketServer::handleNewConnect()
 	std::cout << "websocket new connection" << std::endl;
 	auto socket = _socketServer.nextPendingConnection();
 		
-	_remuxer.addSocket(socket);
+	_router.addSocket(socket);
 }

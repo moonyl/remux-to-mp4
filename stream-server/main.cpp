@@ -29,11 +29,17 @@
 
 #include <QCoreApplication>
 #include "WebSocketServer.h"
+#include "WebSocketRouter.h"
+#include "RemuxerManager.h"
+#include "StreamSetupCommunicator.h"
 
 int main(int argc, char** argv)
 {
 	QCoreApplication coreApplication(argc, argv);
-	WebSocketServer server;
+	StreamSetupCommunicator communicator;
+	RemuxerManager remuxerManager(communicator);
+	WebSocketRouter router(remuxerManager);
+	WebSocketServer server(router);
 
 	return coreApplication.exec();
 }

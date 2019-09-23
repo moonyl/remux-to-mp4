@@ -7,6 +7,7 @@
 #include <QQueue>
 #include "RemuxingContext.h"
 #include <iostream>
+#include <QTimer>
 
 class StreamSetupCommunicator : public QObject
 {

@@ -36,7 +36,7 @@ add_executable(ffmpeg_remux
 	HeaderGenerater.cpp
 	HeaderGenerater.h
 	main.cpp 	
-	Mp4RemuxManager.h
+	WebSocketRouter.h
 	RemuxedOutput.h	
 	RemuxingContext.h		
 	RemuxingState.cpp
@@ -44,6 +44,8 @@ add_executable(ffmpeg_remux
 	RemuxIntermediate.h
 	RemuxResourceContext.cpp
 	RemuxResourceContext.h	
+	RemuxScheduler.cpp
+	RemuxScheduler.h
 	StreamSetupCommunicator.h
 	utils.c
 	WebSocketServer.cpp
