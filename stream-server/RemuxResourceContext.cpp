@@ -38,7 +38,12 @@ void RemuxResourceContext::openInput(const char* in_filename)
 	if (ret  < 0) {
 		throw EXCEPTION_MESSAGE(Exception, ret, "Error on setting the option of rtsp_transport");
 	}
-	//ret = av_dict_set(&options, "allowed_media_types", "video", 0);
+	
+	// ret = av_dict_set(&inOptions, "allowed_media_types", "video", 0);
+	// if (ret < 0) {
+	// 	throw EXCEPTION_MESSAGE(Exception, ret, "Error on setting the option of allowed_media_types");
+	// }
+	
 	//ret = av_dict_set(&inOptions, "avioflags", "direct", 0);
 	ret = av_dict_set(&inOptions, "fflags", "nobuffer", 0);
 	if (ret < 0) {
@@ -140,8 +145,8 @@ bool RemuxResourceContext::allocTranscodingResources(AVCodecParameters* in_codec
 	if (!_outputCodecCtx) {
 		throw EXCEPTION_MESSAGE(Exception, 0, "Failed on avcodec_alloc_context3 for output");
 	}
-	_outputCodecCtx->channels = 2; //detector.channels();
-	_outputCodecCtx->channel_layout = av_get_default_channel_layout(2);//detector.channelLayout();
+	_outputCodecCtx->channels = detector.channels(); //2; //detector.channels();
+	_outputCodecCtx->channel_layout = av_get_default_channel_layout(_outputCodecCtx->channels);//detector.channelLayout();
 	_outputCodecCtx->sample_rate = detector.sampleRate();
 	_outputCodecCtx->sample_fmt = _outputCodec->sample_fmts[0];
 	_outputCodecCtx->bit_rate = 96000;//detector.bitRate();
@@ -155,8 +160,16 @@ bool RemuxResourceContext::allocTranscodingResources(AVCodecParameters* in_codec
 	 * Mark the encoder so that it behaves accordingly. */
 	if (_ofmtCtx->oformat->flags & AVFMT_GLOBALHEADER)
 		_outputCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+	 AVDictionary* codecOutOptions = NULL;
+	 ret = av_dict_set(&codecOutOptions, "profile", "aac_low", 0);
+	 if (ret < 0) {
+	 	throw EXCEPTION_MESSAGE(Exception, ret, "Error on setting the option of profile");
+	 }
+	
 	/* Open the encoder for the audio stream to use it later. */
-	ret = avcodec_open2(_outputCodecCtx, _outputCodec, nullptr);
+	ret = avcodec_open2(_outputCodecCtx, _outputCodec, &codecOutOptions);
+	//ret = avcodec_open2(_outputCodecCtx, _outputCodec, nullptr);
 	if (ret < 0) {
 		throw EXCEPTION_MESSAGE(Exception, ret, "Failed avcodec_open2 for output");
 	}

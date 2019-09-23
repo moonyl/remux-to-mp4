@@ -70,6 +70,9 @@ class VideoContext {
         this.initializeAllSourceBuffers();
       }
     };
+    this.mp4boxfile.onSidx = function(sidx) {
+      console.log("sidx", { sidx });
+    };
     this.mp4boxfile.onSegment = function(id, user, buffer, sampleNum, is_last) {
       var sb = user;
       //saveBuffer(buffer, "track-" + id + "-segment-" + sb.segmentIndex + ".m4s");
@@ -171,7 +174,7 @@ function addBuffer(video, mp4track, mp4boxfile) {
       });
       sb.ms = ms;
       sb.id = track_id;
-      mp4boxfile.setSegmentOptions(track_id, sb, { nbSamples: 10 });
+      mp4boxfile.setSegmentOptions(track_id, sb, { nbSamples: 1 });
       //mp4boxfile.setSegmentOptions(track_id, sb);
       sb.pendingAppends = [];
     } catch (e) {

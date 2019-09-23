@@ -348,8 +348,12 @@ FrameRemuxer::~FrameRemuxer()
 	av_packet_unref(&_pkt);
 }
 
+#include <QElapsedTimer>
 QByteArray FrameRemuxer::remux()
 {
+	QElapsedTimer elapsedTimer;
+	elapsedTimer.start();
+	
 	AVFormatContext* ifmtCtx = _resource.inputFormatContext();
 
 	int ret = av_read_frame(ifmtCtx, &_pkt);
@@ -372,13 +376,17 @@ QByteArray FrameRemuxer::remux()
 	AVStream* out_stream = ofmtCtx->streams[_pkt.stream_index];
 	int64_t pts = av_rescale_q_rnd(_pkt.pts, in_stream->time_base, out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_PASS_MINMAX));
 	//std::cout << "global pts : " << pts << ", in-timebase: " << in_stream->time_base.den << ", out-timebase: " << out_stream->time_base.den << std::endl;
-	std::cout << "global compensate : " << av_q2d(out_stream->time_base) * pts << ", pts: " << pts << std::endl;
+	//std::cout << "global compensate : " << av_q2d(out_stream->time_base) * pts << ", pts: " << pts << std::endl;
 	// remux case
 	if (in_stream->codecpar->codec_type != AVMEDIA_TYPE_AUDIO ||
 		(in_stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO && !_resource.outputCodecCtx())) {
 		result = doRemux();
+		
+		std::cout << "case remux: " << elapsedTimer.elapsed() << std::endl;
 	} else {
 		result = doTranscode();
+		
+		std::cout << "case transcode: " << elapsedTimer.elapsed() << std::endl;
 	}
 #else
 	QByteArray result;
