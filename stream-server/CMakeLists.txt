@@ -38,6 +38,7 @@ add_executable(ffmpeg_remux
 	main.cpp 	
 	WebSocketRouter.h
 	RemuxedOutput.h	
+	RemuxingContext.cpp
 	RemuxingContext.h		
 	RemuxingState.cpp
 	RemuxingState.h	

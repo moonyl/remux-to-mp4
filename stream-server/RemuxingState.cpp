@@ -32,7 +32,8 @@ QByteArray RemuxStream::remux(RemuxingContext* context)
 	// 	context->changeState(new TrailerWrite);
 	// }
 	// return QByteArray();
-	
+
+	std::cout << "media name: " << context->_inFileName.c_str() << std::endl;
 	try {
 		if (!_frameRemuxer) {
 			_frameRemuxer.reset(new FrameRemuxer(context->resource()));
@@ -50,16 +51,21 @@ QByteArray RemuxStream::remux(RemuxingContext* context)
 
 QByteArray TrailerWrite::remux(RemuxingContext* context)
 {
+	std::cout << "check, " << this << std::endl;
 	QByteArray result = context->resource().remuxedOutput().close();
 	int ret = av_write_trailer(context->resource().outputFormatContext());
 	if (ret < 0) {
 		throw EXCEPTION_MESSAGE(Exception, ret, "Error on writing trailer");
 	}
 	context->handleStreamEnd();
+	context->changeState(new Idle);
 	return result;
 }
 
-// bool ResourceRelease::remux(RemuxingContext* context)
-// {
-// 	return false;
-// }
+QByteArray Idle::remux(RemuxingContext* context)
+{
+	if (!context->_ended) {
+		context->changeState(new HeaderGenerate);
+	}
+	return QByteArray();
+}

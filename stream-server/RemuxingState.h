@@ -35,3 +35,9 @@ class TrailerWrite : public RemuxingState
 public:
 	QByteArray remux(RemuxingContext* context);
 };
+
+class Idle : public RemuxingState
+{
+public:
+	QByteArray remux(RemuxingContext* context);
+};

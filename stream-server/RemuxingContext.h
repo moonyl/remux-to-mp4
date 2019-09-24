@@ -8,6 +8,7 @@ extern "C" {
 }
 #include "RemuxResourceContext.h"
 #include "RemuxingState.h"
+#include <QtConcurrent>
 
 #include <iostream>
 class QWebSocket;
@@ -15,24 +16,42 @@ class QWebSocket;
 class RemuxingContext
 {
 	std::string _inFileName;
-	QWebSocket* _socket;
+	//QWebSocket* _socket;
+	QSet<QWebSocket*> _sockets;
 	std::unique_ptr<RemuxResourceContext> _resource;
 	std::unique_ptr<RemuxingState> _state;
-	bool _ended = false;
+	bool _ended = true;
+	QFuture<QByteArray> _future;
+	bool _tryRemuxing = false;
 
 public:
-	RemuxingContext(const char* in_filename) : _inFileName(in_filename), _state(new HeaderGenerate), _resource(new RemuxResourceContext) {}
+	RemuxingContext() : RemuxingContext("") {}
+	RemuxingContext(const char* in_filename) : _inFileName(in_filename), _state(new Idle), _resource(new RemuxResourceContext) {}
 	~RemuxingContext()
 	{
 		std::cout << "check, " << __FUNCTION__ << std::endl;
 	}
 
-	void restart()
+	void setUrl(const char* inFileName)
 	{
-		_resource.reset(new RemuxResourceContext);
-		_state.reset(new HeaderGenerate);		
+		_inFileName = inFileName;
+		_ended = false;
 	}
-	
+
+	void asyncRemux();
+	bool isAsyncJobFinished() const { return _future.isFinished(); }
+	void sendResult()
+	{
+		auto result = _future.result();
+		_tryRemuxing = false;
+		if(result.isEmpty()) {
+			return;
+		}
+		for (auto socket : sockets()) {
+			socket->sendBinaryMessage(result);
+		}		
+	}
+
 	QByteArray remux()
 	{		
 		return _state->remux(this);
@@ -40,23 +59,42 @@ public:
 
 	void addSocket(QWebSocket* socket)
 	{
-		//_sockets << socket;
-		_socket = socket;
+		QObject::connect(socket, &QWebSocket::disconnected, [this, socket]()
+			{
+				_sockets.remove(socket);
+			});
+
+		_sockets << socket;
 	}
 
-	void sendRemuxed(const QByteArray &remuxed)
+	QList<QWebSocket*> sockets() const
 	{
-		if (!remuxed.isEmpty()) {
-			_socket->sendBinaryMessage(remuxed);
-		}		
+		return _sockets.toList();
 	}
 
+	bool prepared() const
+	{
+		return (!_ended) && (!_inFileName.empty());
+	}
+	
 	bool isStreamEnded() const
 	{
-		return _ended;
+		// 이름도 할당되지 않고 스트림이 끝났다고 판단하면, 초기상태이다.
+		return _ended && (!_inFileName.empty());
+	}
+
+	// 소켓은 메인 스레드에서 처리되어야 한다.
+	void monitorStream()
+	{
+		if (isStreamEnded()) {
+			for (auto socket : _sockets.toList()) {
+				socket->close();
+			}
+		}
 	}
 
 private:
+	// TODO : 다른 스레드에서 동작할 것이다.
 	void changeState(RemuxingState* state)
 	{
 		_state.reset(state);
@@ -65,12 +103,12 @@ private:
 	void handleStreamEnd()
 	{
 		_ended = true;
-		_socket->close();
-	}
+	}	
 	
 	RemuxResourceContext& resource() { return *_resource; }	
 	
 	friend class HeaderGenerate;
 	friend class RemuxStream;
-	friend class TrailerWrite;	
+	friend class TrailerWrite;
+	friend class Idle;
 };

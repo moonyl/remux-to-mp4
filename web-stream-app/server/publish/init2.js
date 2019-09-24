@@ -94,7 +94,7 @@ class VideoContext {
       //     ", segments pending append: " +
       //     sb.pendingAppends.length
       // );
-      onUpdateEnd.call(sb, true, false, this.mp4boxfile);
+      onUpdateEnd.call(sb, true, false);
     };
     //this.mp4boxfile = mp4boxfile;
 
@@ -119,11 +119,11 @@ class VideoContext {
 
 window.onload = function() {
   console.log("window onload");
-  let context0 = new VideoContext(
-    "ws://localhost:3001/livews/90f148c8-a487-429e-82a4-e36528fea7d5",
-    "player0"
-  );
-  videoContexts.push(context0);
+  //   let context0 = new VideoContext(
+  //     "ws://localhost:3001/livews/90f148c8-a487-429e-82a4-e36528fea7d5",
+  //     "player0"
+  //   );
+  //   videoContexts.push(context0);
 
   let context1 = new VideoContext(
     "ws://localhost:3001/livews/80f148c8-a487-429e-82a4-e36528fea7d5",
@@ -258,9 +258,9 @@ function onInitAppended(mp4boxfile, autoplay, e) {
   if (sb.ms.readyState === "open") {
     sb.sampleNum = 0;
     sb.removeEventListener("updateend", onInitAppended);
-    sb.addEventListener("updateend", onUpdateEnd.bind(sb, true, true, mp4boxfile));
+    sb.addEventListener("updateend", onUpdateEnd.bind(sb, true, true));
     /* In case there are already pending buffers we call onUpdateEnd to start appending them*/
-    onUpdateEnd.call(sb, false, true, mp4boxfile);
+    onUpdateEnd.call(sb, false, true);
     sb.ms.pendingInits--;
     if (autoplay && sb.ms.pendingInits === 0) {
       console.log("mp4boxfile start");
@@ -269,17 +269,15 @@ function onInitAppended(mp4boxfile, autoplay, e) {
   }
 }
 
-function onUpdateEnd(isNotInit, isEndOfAppend, mp4boxfile) {
+function onUpdateEnd(isNotInit, isEndOfAppend) {
   if (isEndOfAppend === true) {
     if (isNotInit === true) {
       //console.log("updateBufferedString maybe called");
       //NOTE: 상태를 나타내는 부분인듯. 필요없다.
       //updateBufferedString(this, "Update ended");
     }
-    //console.log("onUpdateEnd, this: ", this);
     if (this.sampleNum) {
-      //videoContexts[0].mp4boxfile.releaseUsedSamples(this.id, this.sampleNum);
-      mp4boxfile.releaseUsedSamples(this.id, this.sampleNum);
+      videoContexts[0].mp4boxfile.releaseUsedSamples(this.id, this.sampleNum);
       delete this.sampleNum;
     }
     if (this.is_last) {

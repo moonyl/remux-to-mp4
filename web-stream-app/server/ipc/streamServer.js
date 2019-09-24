@@ -7,7 +7,7 @@ const StreamServerHandlers = {
     socket.on("data", data => {
       const request = JSON.parse(data);
       //console.log({ request });
-      const { cmd, param } = request;
+      const { cmd, param, sid } = request;
       if (cmd === "stream") {
         const { id } = param;
         console.log({ param });
@@ -18,13 +18,16 @@ const StreamServerHandlers = {
           }
           console.log({ data });
           const { url, user, password } = data;
-          socket.write(JSON.stringify({ state: "OK", result: { url, user, password } }), err => {
-            if (err) {
-              console.error(err);
-              return;
+          socket.write(
+            JSON.stringify({ sid, state: "OK", result: { url, user, password } }),
+            err => {
+              if (err) {
+                console.error(err);
+                return;
+              }
+              console.log("replied");
             }
-            console.log("replied");
-          });
+          );
         });
       }
     });

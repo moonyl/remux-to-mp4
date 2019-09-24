@@ -4,6 +4,8 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 #include <QByteArray>
+#include <QMutex>
+
 class RemuxResourceContext;
 
 class FrameRemuxer
@@ -13,6 +15,9 @@ class FrameRemuxer
 	RemuxResourceContext& _resource;
 	//bool _alreadyReadFrame = false;
 	int64_t _pts = -1;
+	static QMutex frameReadMutex;
+	static QMutex frameWriteMutex;
+	
 public:
 	FrameRemuxer(RemuxResourceContext& resource) : _resource(resource) {}
 	~FrameRemuxer();

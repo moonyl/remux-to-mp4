@@ -3,7 +3,7 @@
 
 #include <iostream>
 RemuxResourceContext::~RemuxResourceContext()
-{
+{	
 	avformat_close_input(&_ifmtCtx);
 	/* close output */
 	AVOutputFormat* ofmt = _ofmtCtx->oformat;
@@ -38,7 +38,7 @@ void RemuxResourceContext::openInput(const char* in_filename)
 	if (ret  < 0) {
 		throw EXCEPTION_MESSAGE(Exception, ret, "Error on setting the option of rtsp_transport");
 	}
-	
+
 	// ret = av_dict_set(&inOptions, "allowed_media_types", "video", 0);
 	// if (ret < 0) {
 	// 	throw EXCEPTION_MESSAGE(Exception, ret, "Error on setting the option of allowed_media_types");

@@ -93,6 +93,8 @@ void add_samples_to_fifo(AVAudioFifo* fifo,
 	}
 }
 
+QMutex FrameRemuxer::frameWriteMutex;
+
 QByteArray FrameRemuxer::doRemux()
 {
 	AVFormatContext* ifmtCtx = _resource.inputFormatContext();
@@ -108,8 +110,11 @@ QByteArray FrameRemuxer::doRemux()
 	if (_pts == -1) {
 		_pts = _pkt.pts;
 	}
-	
-	return writeStream(ofmtCtx, remuxedOut, _pkt);
+
+	//{
+		//QMutexLocker locker(&frameWriteMutex);
+		return writeStream(ofmtCtx, remuxedOut, _pkt);
+	//}
 }
 
 class DecodingJob
@@ -307,7 +312,7 @@ QByteArray FrameRemuxer::doTranscode()
 	add_samples_to_fifo(_resource.audioFifo(), resamplingJob.converted(), decodingJob.decoded()->nb_samples);
 
 	if (av_audio_fifo_size(_resource.audioFifo()) < _resource.outputCodecCtx()->frame_size) {
-		std::cout << "fifo size: " << av_audio_fifo_size(_resource.audioFifo()) << ", frame_size: " << _resource.outputCodecCtx()->frame_size << std::endl;
+		//std::cout << "fifo size: " << av_audio_fifo_size(_resource.audioFifo()) << ", frame_size: " << _resource.outputCodecCtx()->frame_size << std::endl;
 		return QByteArray();
 	}
 
@@ -348,19 +353,26 @@ FrameRemuxer::~FrameRemuxer()
 	av_packet_unref(&_pkt);
 }
 
+
+QMutex FrameRemuxer::frameReadMutex;
+
 #include <QElapsedTimer>
 QByteArray FrameRemuxer::remux()
 {
 	QElapsedTimer elapsedTimer;
 	elapsedTimer.start();
-	
 	AVFormatContext* ifmtCtx = _resource.inputFormatContext();
 
-	int ret = av_read_frame(ifmtCtx, &_pkt);
-	if (ret < 0) {
-		throw EXCEPTION_MESSAGE(Exception, ret, "av_read_frame error");
-	}
+	//{
+		//QMutexLocker locker(&frameReadMutex);
+		int ret = av_read_frame(ifmtCtx, &_pkt);
+		if (ret < 0) {
+			throw EXCEPTION_MESSAGE(Exception, ret, "av_read_frame error");
+		}
+	//}
 
+	std::cout << "after read: " << elapsedTimer.elapsed() << std::endl;
+	
 	AVStream* in_stream = ifmtCtx->streams[_pkt.stream_index];
 	if (in_stream->codecpar->codec_type != AVMEDIA_TYPE_AUDIO &&
 		in_stream->codecpar->codec_type != AVMEDIA_TYPE_VIDEO &&

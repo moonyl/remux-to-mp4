@@ -57,8 +57,8 @@ private slots:
 	void handleDisconnected()
 	{
 		QWebSocket* pClient = qobject_cast<QWebSocket*>(sender());
-		std::cout << "socket disconnected" << std::endl;
-		pClient->deleteLater();
+		std::cout << "socket disconnected" << std::endl;		
+		pClient->deleteLater();		
 	}
 
 	void handleTextMessageReceived(const QString& textMesage)
