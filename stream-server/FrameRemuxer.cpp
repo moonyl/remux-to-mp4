@@ -356,11 +356,11 @@ FrameRemuxer::~FrameRemuxer()
 
 QMutex FrameRemuxer::frameReadMutex;
 
-#include <QElapsedTimer>
+//#include <QElapsedTimer>
 QByteArray FrameRemuxer::remux()
 {
-	QElapsedTimer elapsedTimer;
-	elapsedTimer.start();
+	//QElapsedTimer elapsedTimer;
+	//elapsedTimer.start();
 	AVFormatContext* ifmtCtx = _resource.inputFormatContext();
 
 	//{
@@ -371,7 +371,7 @@ QByteArray FrameRemuxer::remux()
 		}
 	//}
 
-	std::cout << "after read: " << elapsedTimer.elapsed() << std::endl;
+	//std::cout << "after read: " << elapsedTimer.elapsed() << std::endl;
 	
 	AVStream* in_stream = ifmtCtx->streams[_pkt.stream_index];
 	if (in_stream->codecpar->codec_type != AVMEDIA_TYPE_AUDIO &&
@@ -394,11 +394,11 @@ QByteArray FrameRemuxer::remux()
 		(in_stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO && !_resource.outputCodecCtx())) {
 		result = doRemux();
 		
-		std::cout << "case remux: " << elapsedTimer.elapsed() << std::endl;
+		//std::cout << "case remux: " << elapsedTimer.elapsed() << std::endl;
 	} else {
 		result = doTranscode();
 		
-		std::cout << "case transcode: " << elapsedTimer.elapsed() << std::endl;
+		//std::cout << "case transcode: " << elapsedTimer.elapsed() << std::endl;
 	}
 #else
 	QByteArray result;

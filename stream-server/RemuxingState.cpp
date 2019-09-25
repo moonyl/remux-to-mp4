@@ -33,7 +33,7 @@ QByteArray RemuxStream::remux(RemuxingContext* context)
 	// }
 	// return QByteArray();
 
-	std::cout << "media name: " << context->_inFileName.c_str() << std::endl;
+	//std::cout << "media name: " << context->_inFileName.c_str() << std::endl;
 	try {
 		if (!_frameRemuxer) {
 			_frameRemuxer.reset(new FrameRemuxer(context->resource()));

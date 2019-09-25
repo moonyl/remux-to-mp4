@@ -19,3 +19,6 @@ public:
 	//void makeHeader(const char* in_filename, QWebSocket* socket);
 	QByteArray makeHeader(const char* in_filename);
 };
+
+class RemuxedOutput;
+QByteArray getHeaderByteArray(AVFormatContext* ofmtCtx, RemuxedOutput& remuxedOut);

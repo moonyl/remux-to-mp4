@@ -34,8 +34,14 @@ public:
 		if (!contains(cameraId)) {
 			_setupCommunicator.makeRemuxContext(cameraId);
 			const auto &remuxer = QSharedPointer<RemuxingContext>{ new RemuxingContext };
+			QObject::connect(remuxer.get(), &RemuxingContext::singleStepFinished, [this]()
+				{
+					asynRemux();
+					//monitorStream();
+					cleanupEnded();
+				});
 			
-			insert(cameraId, remuxer);		
+			insert(cameraId, remuxer);			
 		}
 		value(cameraId)->addSocket(socket);
 	}
@@ -45,16 +51,6 @@ public:
 		for (const auto& remuxer: remuxers()) {
 			remuxer->asyncRemux();			
 		}		
-	}
-
-	void monitorStream()
-	{
-		for (const auto& remuxer : remuxers()) {
-			if (remuxer->isAsyncJobFinished()) {
-				remuxer->sendResult();
-				remuxer->monitorStream();
-			}
-		}
 	}
 
 	void startRemux()

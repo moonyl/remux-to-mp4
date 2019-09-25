@@ -12,30 +12,12 @@ class QWebSocket;
 
 class WebSocketRouter : public QObject
 {
-Q_OBJECT
-
-	//QMap<QUuid, QSharedPointer<RemuxingContext>> _remuxerMap;
+	Q_OBJECT
+	
 	RemuxerManager& _remuxerManager;
-	//QTimer _timer;
-	//StreamSetupCommunicator _communicator;
-
 public:
 	WebSocketRouter(RemuxerManager& remuxerManager, QObject* parent = nullptr) : QObject(parent), _remuxerManager(remuxerManager)
 	{
-		// _timer.setInterval(0);
-		// connect(&_timer, &QTimer::timeout, [this]()
-		// {
-		// 	QList<QUuid> tobeRemoved;
-		// 	for (const auto& remuxer : _remuxerManager.remuxers()) {
-		// 		auto result = remuxer->remux();
-		// 		remuxer->sendRemuxed(result);
-		// 	}
-		// 	_remuxerManager.cleanupEnded();
-		//
-		// 	if (_remuxerManager.isEmpty()) {
-		// 		_timer.stop();
-		// 	}
-		// });
 	}
 
 	void addSocket(QWebSocket* socket)

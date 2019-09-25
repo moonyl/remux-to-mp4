@@ -1,45 +1,106 @@
-//let ws = null;
-
 // TODO: socketUrl 에 따라 다른 스트림이 전송되어야 한다.
 let videoContexts = [];
+
+const configSocket = (ws, onMessage) => {
+  ws.binaryType = "arraybuffer";
+
+  ws.addEventListener("message", event => {
+    onMessage(event.data);
+  });
+  ws.addEventListener("error", e => {
+    console.error(e);
+  });
+  ws.addEventListener("close", e => {
+    console.log("websocket closed");
+  });
+  ws.addEventListener("open", e => {
+    console.log("open on websocket");
+    ws.send("start");
+  });
+};
+
+const configMediaSource = mediaSource => {
+  mediaSource.addEventListener("sourceopen", onMSEOpen);
+  mediaSource.addEventListener("sourceclose", onMSEClose);
+  mediaSource.addEventListener("webkitsourceopen", onMSEOpen);
+  mediaSource.addEventListener("webkitsourceclose", onMSEClose);
+};
+
+const configVideo = (video, mediaSource) => {
+  video.src = URL.createObjectURL(mediaSource);
+  console.log("currentTime: ", video.currentTime);
+  video.ms = mediaSource;
+  console.log("ms: ", video.ms);
+};
+
+const configMp4boxfile = (mp4boxfile, onReady, onSegment) => {
+  console.log("mp4boxfile: ", this.mp4boxfile);
+  mp4boxfile.onMoovStart = function() {
+    console.log("Application", "Starting to parse movie information");
+  };
+  mp4boxfile.onReady = onReady;
+  mp4boxfile.onSidx = function(sidx) {
+    console.log("sidx", { sidx });
+  };
+  mp4boxfile.onSegment = onSegment;
+};
+
+const onReady = (onInfoUpdated, mediaSource, autoplay, initializeAllSourceBuffers, info) => {
+  console.log("this: ", this);
+  //let ms = this.video.ms;
+  let ms = mediaSource;
+
+  console.log("Application", "Movie information received");
+  //this.movieInfo = info;
+  onInfoUpdated(info);
+  console.log({ info });
+
+  if (info.isFragmented) {
+    const { fragment_duration } = info;
+    if (fragment_duration) {
+      ms.duration = info.fragment_duration / info.timescale;
+    } else {
+      ms.duration = 1 / 0;
+    }
+  } else {
+    ms.duration = info.duration / info.timescale;
+  }
+  addSourceBufferListener(info);
+  //stop();
+  if (autoplay) {
+    initializeAllSourceBuffers();
+  }
+};
+
+const onSegment = (mp4boxfile, id, user, buffer, sampleNum, is_last) => {
+  var sb = user;
+  sb.segmentIndex++;
+  sb.pendingAppends.push({ id: id, buffer: buffer, sampleNum: sampleNum, is_last: is_last });
+  onUpdateEnd.call(sb, true, false, mp4boxfile);
+};
 
 class VideoContext {
   constructor(socketUrl, playerId) {
     this.ws = new WebSocket(socketUrl);
-    this.ws.binaryType = "arraybuffer";
-
     this.fileStart = 0;
-    //console.log("fileStart = ", fileStart);
-    let ws = this.ws;
-    ws.addEventListener("message", event => {
-      event.data.fileStart = this.fileStart;
-      this.fileStart = this.mp4boxfile.appendBuffer(event.data);
-    });
-    ws.addEventListener("error", e => {
-      console.error(e);
-    });
-    ws.addEventListener("close", e => {
-      console.log("websocket closed");
-    });
-    ws.addEventListener("open", e => {
-      console.log("open on websocket");
-      this.ws.send("start");
+    configSocket(this.ws, data => {
+      data.fileStart = this.fileStart;
+      this.fileStart = this.mp4boxfile.appendBuffer(data);
     });
 
     window.MediaSource = window.MediaSource || window.WebKitMediaSource;
     const mediaSource = new window.MediaSource();
-    this.video = document.getElementById(playerId);
-    this.video.src = URL.createObjectURL(mediaSource);
-    this.video.ms = mediaSource;
-    mediaSource.addEventListener("sourceopen", onMSEOpen);
-    mediaSource.addEventListener("sourceclose", onMSEClose);
-    mediaSource.addEventListener("webkitsourceopen", onMSEOpen);
-    mediaSource.addEventListener("webkitsourceclose", onMSEClose);
+    configMediaSource(mediaSource);
 
-    //videoContext.video = video;
-    //videoContext.autoplay = false;
+    this.video = document.getElementById(playerId);
+    configVideo(this.video, mediaSource);
+
     this.autoplay = false;
   }
+
+  onInfoUpdated = info => {
+    this.movieInfo = info;
+  };
 
   start = () => {
     this.autoplay = true;
@@ -50,58 +111,18 @@ class VideoContext {
     }
 
     this.mp4boxfile = MP4Box.createFile();
-    console.log("mp4boxfile: ", this.mp4boxfile);
-    this.mp4boxfile.onMoovStart = function() {
-      console.log("Application", "Starting to parse movie information");
-    };
-    this.mp4boxfile.onReady = info => {
-      console.log("this: ", this);
-      let ms = this.video.ms;
-      console.log("Application", "Movie information received");
-      this.movieInfo = info;
-      console.log({ info });
 
-      if (info.isFragmented) {
-        const { fragment_duration } = info;
-        if (fragment_duration) {
-          ms.duration = info.fragment_duration / info.timescale;
-        } else {
-          ms.duration = 1 / 0;
-        }
-      } else {
-        ms.duration = info.duration / info.timescale;
-      }
-      addSourceBufferListener(info);
-      stop();
-      if (this.autoplay) {
-        this.initializeAllSourceBuffers();
-      }
-    };
-    this.mp4boxfile.onSidx = function(sidx) {
-      console.log("sidx", { sidx });
-    };
-    this.mp4boxfile.onSegment = function(id, user, buffer, sampleNum, is_last) {
-      var sb = user;
-      //saveBuffer(buffer, "track-" + id + "-segment-" + sb.segmentIndex + ".m4s");
-      sb.segmentIndex++;
-      sb.pendingAppends.push({ id: id, buffer: buffer, sampleNum: sampleNum, is_last: is_last });
-      // console.log(
-      //   "Application",
-      //   "Received new segment for track " +
-      //     id +
-      //     " up to sample #" +
-      //     sampleNum +
-      //     ", segments pending append: " +
-      //     sb.pendingAppends.length
-      // );
-      onUpdateEnd.call(sb, true, false, this.mp4boxfile);
-    };
-    //this.mp4boxfile = mp4boxfile;
-
-    // if (this.ws) {
-    //   console.log("send command");
-    //   this.ws.send("start");
-    // }
+    configMp4boxfile(
+      this.mp4boxfile,
+      onReady.bind(
+        null,
+        this.onInfoUpdated,
+        this.video.ms,
+        this.autoplay,
+        this.initializeAllSourceBuffers
+      ),
+      onSegment.bind(null, this.mp4boxfile)
+    );
   };
 
   initializeAllSourceBuffers = () => {
@@ -119,19 +140,28 @@ class VideoContext {
 
 window.onload = function() {
   console.log("window onload");
-  let context0 = new VideoContext(
-    "ws://localhost:3001/livews/90f148c8-a487-429e-82a4-e36528fea7d5",
-    "player0"
-  );
-  videoContexts.push(context0);
 
-  let context1 = new VideoContext(
-    "ws://localhost:3001/livews/80f148c8-a487-429e-82a4-e36528fea7d5",
-    "player1"
+  videoContexts.push(
+    new VideoContext("ws://localhost:3001/livews/90f148c8-a487-429e-82a4-e36528fea7d5", "player0")
   );
-  videoContexts.push(context1);
+  videoContexts.push(
+    new VideoContext("ws://localhost:3001/livews/80f148c8-a487-429e-82a4-e36528fea7d5", "player1")
+  );
+  // videoContexts.push(
+  //   new VideoContext("ws://localhost:3001/livews/90f148c8-a487-429e-82a4-e36528fea7d5", "player2")
+  // );
+  // videoContexts.push(
+  //   new VideoContext("ws://localhost:3001/livews/80f148c8-a487-429e-82a4-e36528fea7d5", "player3")
+  // );
   //console.log("sendCommand");
 };
+
+function sendCommand(event) {
+  console.log("this: ", this);
+  for (context of videoContexts) {
+    context.start();
+  }
+}
 
 function onMSEOpen() {
   console.log("MSEOpen");
@@ -192,43 +222,6 @@ function addBuffer(video, mp4track, mp4boxfile) {
         "Cannot create buffer with type '" + mime + "'" + e
       );
     }
-  } else {
-    Log.warn(
-      "MSE",
-      "MIME type '" +
-        mime +
-        "' not supported for creation of a SourceBuffer for track id " +
-        track_id
-    );
-    var i;
-    var foundTextTrack = false;
-    for (i = 0; i < video.textTracks.length; i++) {
-      var track = video.textTracks[i];
-      if (track.label === "track_" + track_id) {
-        track.mode = "showing";
-        track.div.style.display = "inline";
-        foundTextTrack = true;
-        break;
-      }
-    }
-    if (!foundTextTrack && html5TrackKind !== "") {
-      var texttrack = video.addTextTrack(html5TrackKind, mp4track.name, mp4track.language);
-      texttrack.id = track_id;
-      texttrack.mode = "showing";
-      mp4boxfile.setExtractionOptions(track_id, texttrack, {
-        nbSamples: parseInt(extractionSizeLabel.value)
-      });
-      texttrack.codec = codec;
-      texttrack.mime = codec.substring(codec.indexOf(".") + 1);
-      texttrack.mp4kind = mp4track.kind;
-      texttrack.track_id = track_id;
-      var div = document.createElement("div");
-      div.id = "overlay_track_" + track_id;
-      div.setAttribute("class", "overlay");
-      overlayTracks.appendChild(div);
-      texttrack.div = div;
-      initTrackViewer(texttrack);
-    }
   }
 }
 
@@ -238,19 +231,6 @@ function addSourceBufferListener(info) {
     console.log(track);
   }
 }
-
-// function initializeAllSourceBuffers() {
-//   const { movieInfo, video, mp4boxfile } = videoContexts[0];
-//   if (movieInfo) {
-//     var info = movieInfo;
-//     for (var i = 0; i < info.tracks.length; i++) {
-//       var track = info.tracks[i];
-//       addBuffer(video, track, mp4boxfile);
-//     }
-//     console.log("before initializeSourceBuffers");
-//     initializeSourceBuffers();
-//   }
-// }
 
 function onInitAppended(mp4boxfile, autoplay, e) {
   //console.log({ autoplay });
@@ -271,14 +251,8 @@ function onInitAppended(mp4boxfile, autoplay, e) {
 
 function onUpdateEnd(isNotInit, isEndOfAppend, mp4boxfile) {
   if (isEndOfAppend === true) {
-    if (isNotInit === true) {
-      //console.log("updateBufferedString maybe called");
-      //NOTE: 상태를 나타내는 부분인듯. 필요없다.
-      //updateBufferedString(this, "Update ended");
-    }
     //console.log("onUpdateEnd, this: ", this);
     if (this.sampleNum) {
-      //videoContexts[0].mp4boxfile.releaseUsedSamples(this.id, this.sampleNum);
       mp4boxfile.releaseUsedSamples(this.id, this.sampleNum);
       delete this.sampleNum;
     }
@@ -286,16 +260,7 @@ function onUpdateEnd(isNotInit, isEndOfAppend, mp4boxfile) {
       this.ms.endOfStream();
     }
   }
-  // console.log(
-  //   "ms = ",
-  //   this.ms,
-  //   "reayState = ",
-  //   this.ms.readyState,
-  //   "updating = ",
-  //   this.updating,
-  //   "pendingAppends.length = ",
-  //   this.pendingAppends.length
-  // );
+
   if (this.ms.readyState === "open" && this.updating === false && this.pendingAppends.length > 0) {
     var obj = this.pendingAppends.shift();
     // console.log(
@@ -316,22 +281,17 @@ function initializeSourceBuffers(mp4boxfile, autoplay) {
     if (i === 0) {
       sb.ms.pendingInits = 0;
     }
-    console.log("this is", this);
-    console.log("sb is", sb);
+
     sb.addEventListener("updateend", onInitAppended.bind(null, mp4boxfile, autoplay));
-    //sb.addEventListener("updateend", onInitAppended);
-    console.log("MSE - SourceBuffer #" + sb.id, "Appending initialization data");
     sb.appendBuffer(initSegs[i].buffer);
-    //saveBuffer(initSegs[i].buffer, "track-" + initSegs[i].id + "-init.mp4");
     sb.segmentIndex = 0;
     sb.ms.pendingInits++;
   }
 }
 
-function sendCommand(event) {
-  console.log("this: ", this);
-  for (context of videoContexts) {
-    context.start();
-  }
-  //videoContexts[0].start();
+function timeshift(event) {
+  let video = document.getElementById("player0");
+  video.currentTime += 1;
+  video = document.getElementById("player1");
+  video.currentTime += 1;
 }
