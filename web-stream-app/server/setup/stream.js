@@ -6,14 +6,14 @@ if (process.env.APPDATA) {
 }
 
 const Stream = new LinvoDB("Stream", {
-  id: String,
+  //id: String,
   title: String,
   type: String,
   user: String,
   password: String,
   url: String,
   service: String,
-  media: [{ codec: String, name: String, width: Number, height: Number, url: String }],
+  profiles: [{ codec: String, name: String, width: Number, height: Number, url: String }],
   profileSel: Number
 });
 
