@@ -7,7 +7,27 @@ router.get("/", (req, res) => {
   res.json({ data: "this is index." });
 });
 
-router.get("/streamAll", (req, res) => {
+router.get("/stream/:id", (req, res) => {
+  const { id } = req.params;
+  Stream.findOne({ _id: id }, (error, result) => {
+    if (error) {
+      console.error(error);
+      res.send({ state: "NG", error });
+      return;
+    }
+    console.log({ result });
+    const { _id, title, type, url, user, password, service, profiles, profileSel } = result;
+    res.send({
+      state: "OK",
+      result: {
+        streamId: _id,
+        streamInfo: { title, type, url, user, password, service, profiles, profileSel }
+      }
+    });
+  });
+});
+
+router.get("/stream", (req, res) => {
   Stream.find({}, (error, result) => {
     if (error) {
       console.error(error);
@@ -27,6 +47,55 @@ router.get("/streamAll", (req, res) => {
   });
 });
 
+router.post("/stream", (req, res) => {
+  console.log("body: ", req.body);
+  const { streamId, streamInfo } = req.body;
+  let _id = streamId;
+  if (!streamId) {
+    console.log("new case");
+    _id = uuid();
+    //_id = "e3f3408d-6f8b-430c-926b-3e7e8a5f2aec";
+  }
+  Stream.find({ _id }, (error, result) => {
+    if (error) {
+      console.error(error);
+      res.send({ state: "NG", error });
+      return;
+    }
+    console.log({ result, _id });
+    if (result.length === 0) {
+      console.log("should add new record");
+      let streamData = new Stream();
+      streamData._id = _id;
+      const { title, type, url, user, password, service, profiles, profileSel } = streamInfo;
+      streamData.title = title;
+      streamData.type = type;
+      streamData.url = url;
+      streamData.user = user;
+      streamData.service = service;
+      streamData.password = password;
+      streamData.profiles = profiles;
+      streamData.profileSel = profileSel;
+      streamData.save(error => {
+        if (error) {
+          res.send({ state: "NG", error });
+          return;
+        }
+        res.send({ state: "OK" });
+      });
+      return;
+    }
+    console.log("should update record, result: ", result);
+    Stream.update({ _id }, { $set: streamInfo }, {}, (error, numReplaced) => {
+      if (error) {
+        res.send({ state: "NG", error });
+        return;
+      }
+      console.log("updated");
+      res.send({ state: "OK" });
+    });
+  });
+});
 router.post("/setupStream", (req, res) => {
   console.log("body: ", req.body);
   const { streamId, streamInfo } = req.body;

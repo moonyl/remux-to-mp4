@@ -35,7 +35,7 @@ const StreamsDrawer = ({ onViewStream }) => {
 
   return (
     <Drawer className={classes.drawer} variant="permanent" open={false}>
-      <Fetch url="/api/streamAll">
+      <Fetch url="/api/stream">
         {({ loading, error, data }) => {
           console.log({ data });
           const { streamId, streamInfo } = data;

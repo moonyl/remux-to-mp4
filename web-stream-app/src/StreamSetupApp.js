@@ -1,8 +1,8 @@
 import React from "react";
 import Button from "@material-ui/core/Button";
 import StreamEditDialog from "./components/StreamEditDialog";
-import StreamsTable from "./components/StreamsTable";
 import withStyles from "@material-ui/core/styles/withStyles";
+import StreamsTable from "./components/StreamsTable";
 
 const styles = theme => ({
   app: {
@@ -34,7 +34,7 @@ class StreamSetupApp extends React.Component {
   onSave = () => {
     this.setState({ open: false });
     console.log("location: ", window.location.origin);
-    const route = `${window.location.origin}/api/setupStream`;
+    const route = "/api/stream";
     const { streamId, streamInfo } = this.state;
     const setting = { streamId, streamInfo };
     fetch(route, {
@@ -52,10 +52,13 @@ class StreamSetupApp extends React.Component {
       });
   };
 
+  componentDidMount() {
+    this.findAllStream();
+  }
+
   findAllStream = () => {
     this.setState({ open: false });
-    //console.log("location: ", window.location.origin);
-    const route = `${window.location.origin}/api/streamAll`;
+    const route = "/api/stream";
     fetch(route)
       .then(reply => {
         return reply.json();
@@ -134,7 +137,7 @@ class StreamSetupApp extends React.Component {
           Edit stream
         </Button>
         <Button variant="outlined" color="primary" onClick={this.findAllStream}>
-          Find All Stream
+          update
         </Button>
         <StreamsTable streams={this.state.tableData} />
         <StreamEditDialog

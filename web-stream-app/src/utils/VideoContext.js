@@ -1,131 +1,87 @@
-import MP4Box, { TrackDefault, TrackDefaultList } from "mp4box";
-// TODO: socketUrl 에 따라 다른 스트림이 전송되어야 한다.
-//let videoContexts = [];
-
-const configSocket = (ws, onMessage) => {
-  ws.binaryType = "arraybuffer";
-
-  ws.addEventListener("message", event => {
-    //console.log(typeof event.data);
-    onMessage(event.data);
-  });
-  ws.addEventListener("error", e => {
-    console.error(e);
-  });
-  ws.addEventListener("close", e => {
-    console.log("websocket closed");
-  });
-  ws.addEventListener("open", e => {
-    console.log("open on websocket");
-    ws.send("start");
-  });
-};
-
-const configVideo = (video, mediaSource) => {
-  video.src = URL.createObjectURL(mediaSource);
-  //console.log("currentTime: ", video.currentTime);
-  video.ms = mediaSource;
-  //console.log("ms: ", video.ms);
-};
-
-const configMp4boxfile = (mp4boxfile, onReady, onSegment) => {
-  console.log("mp4boxfile: ", mp4boxfile);
-  mp4boxfile.onMoovStart = function() {
-    console.log("Application", "Starting to parse movie information");
-  };
-  mp4boxfile.onReady = onReady;
-  mp4boxfile.onSidx = function(sidx) {
-    console.log("sidx", { sidx });
-  };
-  mp4boxfile.onSegment = onSegment;
-};
-
-const onReady = (onInfoUpdated, mediaSource, autoplay, initializeAllSourceBuffers, info) => {
-  console.log("this: ", this);
-  //let ms = this.video.ms;
-  let ms = mediaSource;
-
-  console.log("Application", "Movie information received");
-  //this.movieInfo = info;
-  onInfoUpdated(info);
-  console.log({ info });
-
-  if (info.isFragmented) {
-    const { fragment_duration } = info;
-    if (fragment_duration) {
-      ms.duration = info.fragment_duration / info.timescale;
-    } else {
-      ms.duration = 1 / 0;
-    }
-  } else {
-    ms.duration = info.duration / info.timescale;
-  }
-  addSourceBufferListener(info);
-  //stop();
-  if (autoplay) {
-    initializeAllSourceBuffers();
-  }
-};
-
-const onSegment = (mp4boxfile, id, user, buffer, sampleNum, is_last) => {
-  var sb = user;
-  sb.segmentIndex++;
-  sb.pendingAppends.push({ id: id, buffer: buffer, sampleNum: sampleNum, is_last: is_last });
-  onUpdateEnd.call(sb, true, false, mp4boxfile);
-};
+import { TrackDefault, TrackDefaultList } from "mp4box";
+import {
+  createWStreamerClientSocket,
+  createMediaSource,
+  getVideoElement,
+  createMp4boxfile
+} from "./wsStreamerClient";
 
 class VideoContext {
   constructor(socketUrl, playerId) {
-    window.MediaSource = window.MediaSource || window.WebKitMediaSource;
-    const mediaSource = new window.MediaSource();
-    this.configMediaSource(mediaSource);
+    const mediaSource = createMediaSource(onMSEOpen.bind(this), onMSEClose.bind(this));
 
-    this.video = document.getElementById(playerId);
-    configVideo(this.video, mediaSource);
+    this.video = getVideoElement(playerId, mediaSource);
 
-    this.ws = new WebSocket(socketUrl);
     this.fileStart = 0;
     this.startPts = -1;
-    configSocket(this.ws, data => {
-      if (typeof data === "string") {
-        const info = JSON.parse(data);
-        console.log("info =", { info });
-        const { pts } = info;
-        //console.log({ pts });
-        if (pts) {
-          console.log("cpt: ", { pts });
-          this.startPts = pts;
-        }
-        //console.log(info);
-        return;
-      }
-      data.fileStart = this.fileStart;
-      this.fileStart = this.mp4boxfile.appendBuffer(data);
 
-      if (this.video.paused) {
-        if (this.startPts > 0) {
-          this.video.currentTime = this.startPts;
-        }
-        if (!this.video.autoplay) {
-          this.video.autoplay = true;
-        }
-
-        console.log("autoplay on");
-      }
-    });
-
+    this.ws = createWStreamerClientSocket(socketUrl, this.onMessage);
     this.autoplay = false;
   }
 
-  configMediaSource = mediaSource => {
-    mediaSource.addEventListener("sourceopen", onMSEOpen.bind(this));
-    mediaSource.addEventListener("sourceclose", onMSEClose);
-    mediaSource.addEventListener("webkitsourceopen", onMSEOpen.bind(this));
-    mediaSource.addEventListener("webkitsourceclose", onMSEClose);
+  onMessage = data => {
+    if (typeof data === "string") {
+      const info = JSON.parse(data);
+      console.log("info =", { info });
+      const { pts } = info;
+      //console.log({ pts });
+      if (pts) {
+        console.log("cpt: ", { pts });
+        this.startPts = pts;
+      }
+      //console.log(info);
+      return;
+    }
+    data.fileStart = this.fileStart;
+    this.fileStart = this.mp4boxfile.appendBuffer(data);
+
+    if (this.video.paused) {
+      if (this.startPts > 0) {
+        this.video.currentTime = this.startPts;
+      }
+      if (!this.video.autoplay) {
+        this.video.autoplay = true;
+      }
+
+      console.log("autoplay on");
+    }
   };
 
   onInfoUpdated = info => {
     this.movieInfo = info;
+  };
+
+  onSegment = (id, user, buffer, sampleNum, is_last) => {
+    var sb = user;
+    sb.segmentIndex++;
+    sb.pendingAppends.push({ id: id, buffer: buffer, sampleNum: sampleNum, is_last: is_last });
+    onUpdateEnd.call(sb, true, false, this.mp4boxfile);
+  };
+
+  onReady = info => {
+    console.log("this: ", this);
+    let ms = this.video.ms;
+
+    console.log("Application", "Movie information received");
+    //this.movieInfo = info;
+    this.onInfoUpdated(info);
+    console.log({ info });
+
+    if (info.isFragmented) {
+      const { fragment_duration } = info;
+      if (fragment_duration) {
+        ms.duration = info.fragment_duration / info.timescale;
+      } else {
+        ms.duration = 1 / 0;
+      }
+    } else {
+      ms.duration = info.duration / info.timescale;
+    }
+    addSourceBufferListener(info);
+    //stop();
+    if (this.autoplay) {
+      this.initializeAllSourceBuffers();
+    }
   };
 
   start = () => {
@@ -136,19 +92,7 @@ class VideoContext {
       return;
     }
 
-    this.mp4boxfile = MP4Box.createFile();
-
-    configMp4boxfile(
-      this.mp4boxfile,
-      onReady.bind(
-        null,
-        this.onInfoUpdated,
-        this.video.ms,
-        this.autoplay,
-        this.initializeAllSourceBuffers
-      ),
-      onSegment.bind(null, this.mp4boxfile)
-    );
+    this.mp4boxfile = createMp4boxfile(this.onReady, this.onSegment);
 
     console.log("cpt before call play");
     //console.log("cpt startPts: ", this.startPts);
@@ -156,14 +100,6 @@ class VideoContext {
       console.log("cpt set startPts: ", this.startPts);
       this.video.currentTime = this.startPts;
     }
-    // this.video
-    //   .play()
-    //   .then(result => {
-    //     console.log("cpt startPts: ", this.startPts);
-    //   })
-    //   .catch(error => {
-    //     console.error(error);
-    //   });
   };
 
   initializeAllSourceBuffers = () => {
@@ -181,13 +117,14 @@ class VideoContext {
 
 function onMSEOpen() {
   console.log("MSEOpen");
-  console.log("this=", this);
+  //console.log("this=", this);
   this.start();
   //sendCommand();
 }
 
 function onMSEClose() {
   console.log("MSEClose");
+  this.ws.close();
 }
 
 function addBuffer(video, mp4track, mp4boxfile) {
@@ -306,12 +243,5 @@ function initializeSourceBuffers(mp4boxfile, autoplay) {
     sb.ms.pendingInits++;
   }
 }
-
-// function timeshift(event) {
-//   let video = document.getElementById("player0");
-//   video.currentTime += 1;
-//   video = document.getElementById("player1");
-//   video.currentTime += 1;
-// }
 
 export default VideoContext;
