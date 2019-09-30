@@ -11,6 +11,7 @@
     "http-proxy-middleware": "^0.20.0",
     "leveldown": "^5.2.0",
     "linvodb3": "^3.26.0",
+    "mp4box": "^0.3.20",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "react-draggable": "^4.0.3",
@@ -19,7 +20,7 @@
     "uuid": "^3.3.3"
   },
   "scripts": {
-    "start": "npm-run-all --parallel start:**",
+    "start": "npm-run-all --parallel start:*",
     "start:client": "react-scripts start",
     "start:server": "nodemon ./server/app.js",
     "build": "react-scripts build",

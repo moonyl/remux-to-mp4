@@ -27,6 +27,9 @@ class RemuxingContext : public QObject
 	bool _tryRemuxing = false;
 	QFutureWatcher<QByteArray> _futureWatcher;
 
+	QByteArray _header;
+	double _pts = 0;
+
 public:
 	RemuxingContext(QObject* parent = nullptr) : RemuxingContext("", parent) {}
 	RemuxingContext(const char* in_filename, QObject* parent = nullptr);
@@ -58,6 +61,9 @@ private:
 	void handleStreamEnd();
 
 	RemuxResourceContext& resource();
+
+	void setHeader(const QByteArray& header);
+	void updatePts(double pts) { _pts = pts; }
 
 private slots:
 	void handleSocketClosed();

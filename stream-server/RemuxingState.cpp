@@ -18,6 +18,7 @@ QByteArray HeaderGenerate::remux(RemuxingContext* context)
 		throw e;
 	}
 	context->changeState(new RemuxStream);
+	context->setHeader(result);
 	return result;
 	//return true;
 }
@@ -38,7 +39,9 @@ QByteArray RemuxStream::remux(RemuxingContext* context)
 		if (!_frameRemuxer) {
 			_frameRemuxer.reset(new FrameRemuxer(context->resource()));
 		}
-		return _frameRemuxer->remux();
+		auto remuxed = _frameRemuxer->remux();
+		context->updatePts(remuxed.pts);
+		return remuxed.frame;
 	} catch(Exception& e) {
 		if (e.message() == "test finished") {
 			context->changeState(new TrailerWrite);

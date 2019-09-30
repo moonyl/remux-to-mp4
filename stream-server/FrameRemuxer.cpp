@@ -354,10 +354,10 @@ FrameRemuxer::~FrameRemuxer()
 }
 
 
-QMutex FrameRemuxer::frameReadMutex;
+//QMutex FrameRemuxer::frameReadMutex;
 
 //#include <QElapsedTimer>
-QByteArray FrameRemuxer::remux()
+FrameRemuxer::RemuxedFrame FrameRemuxer::remux()
 {
 	//QElapsedTimer elapsedTimer;
 	//elapsedTimer.start();
@@ -379,7 +379,7 @@ QByteArray FrameRemuxer::remux()
 		in_stream->codecpar->codec_type != AVMEDIA_TYPE_SUBTITLE) {
 		std::cout << "cannot mux, maybe camera event?" << std::endl;
 		av_packet_unref(&_pkt);
-		return QByteArray();
+		return { QByteArray(), -1 };
 	}
 
 #if 1
@@ -411,7 +411,8 @@ QByteArray FrameRemuxer::remux()
 		throw EXCEPTION_MESSAGE(Exception, 0, "test finished");
 	}
 #endif	
-
+		
+	//std::cout << "pts: " << av_q2d(in_stream->time_base) * pts << std::endl;
 	av_packet_unref(&_pkt);
-	return result;
+	return { result, av_q2d(in_stream->time_base) * pts };
 }

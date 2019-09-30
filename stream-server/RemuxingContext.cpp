@@ -3,7 +3,14 @@
 
 QByteArray doRemux(RemuxingContext* remuxer)
 {
-	return remuxer->remux();
+	try {
+		return remuxer->remux();
+	} catch(Exception& e) {
+		std::cout << "catch error: " << qPrintable(e.message()) << ", " << e.error() << std::endl;
+	} catch(...) {
+		std::cout << "exception what?" << std::endl;
+	}
+	
 };
 
 RemuxingContext::RemuxingContext(const char* in_filename, QObject* parent):
@@ -74,8 +81,13 @@ void RemuxingContext::addSocket(QWebSocket* socket)
 	// {
 	// 	_sockets.remove(socket);
 	// });
-	if (_sockets.size() > 0) {
-		socket->sendBinaryMessage(getHeaderByteArray(_resource->outputFormatContext(), _resource->remuxedOutput()));
+	if (_sockets.size() > 0 && !_header.isEmpty()) {		
+		auto request = QJsonDocument(QJsonObject{
+			{"pts", _pts }
+			}).toJson();
+		std::cout << "pts: " << _pts << std::endl;
+		socket->sendTextMessage(request);
+		socket->sendBinaryMessage(_header);
 	}
 
 	connect(socket, &QWebSocket::disconnected, this, &RemuxingContext::handleSocketClosed);
@@ -115,6 +127,10 @@ void RemuxingContext::handleStreamEnd()
 RemuxResourceContext& RemuxingContext::resource()
 {
 	return *_resource;
+}
+void RemuxingContext::setHeader(const QByteArray& header)
+{
+	_header = header;
 }
 
 void RemuxingContext::handleSocketClosed()

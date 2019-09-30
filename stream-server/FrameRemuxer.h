@@ -21,7 +21,12 @@ class FrameRemuxer
 public:
 	FrameRemuxer(RemuxResourceContext& resource) : _resource(resource) {}
 	~FrameRemuxer();
-	QByteArray remux();
+	struct RemuxedFrame
+	{
+		QByteArray frame;
+		double pts;
+	};
+	RemuxedFrame remux();
 
 private:
 	QByteArray doRemux();

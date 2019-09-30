@@ -9,9 +9,9 @@ const StreamServerHandlers = {
       //console.log({ request });
       const { cmd, param, sid } = request;
       if (cmd === "stream") {
-        const { id } = param;
+        const { id: _id } = param;
         console.log({ param });
-        Stream.findOne({ id }, (err, data) => {
+        Stream.findOne({ _id }, (err, data) => {
           if (err) {
             console.error(err);
             return;
