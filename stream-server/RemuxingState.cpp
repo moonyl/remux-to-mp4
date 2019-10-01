@@ -36,6 +36,11 @@ QByteArray RemuxStream::remux(RemuxingContext* context)
 
 	//std::cout << "media name: " << context->_inFileName.c_str() << std::endl;
 	try {
+		if (context->countOfClients() == 0) {
+			context->changeState(new TrailerWrite);
+			return QByteArray();
+		}
+		
 		if (!_frameRemuxer) {
 			_frameRemuxer.reset(new FrameRemuxer(context->resource()));
 		}

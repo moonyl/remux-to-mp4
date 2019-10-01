@@ -65,6 +65,8 @@ private:
 	void setHeader(const QByteArray& header);
 	void updatePts(double pts) { _pts = pts; }
 
+	int countOfClients() const;
+	
 private slots:
 	void handleSocketClosed();
 	

@@ -1,11 +1,10 @@
-import React, { useState } from "react";
-import { makeStyles } from "@material-ui/core/styles";
+import React from "react";
 import StreamsDrawer from "./components/StreamsDrawer";
-import VideoPlayer from "@moonyl/react-video-js-player";
 import VideoContext from "./utils/VideoContext";
-import { Card, CardContent, CardActions, Typography, Button } from "@material-ui/core";
+import withStyles from "@material-ui/core/styles/withStyles";
+import VideoCard from "./components/VideoCard";
 
-const useStyles = makeStyles(theme => ({
+const styles = theme => ({
   app: {
     position: "fixed",
     top: theme.overrides.heightOffset,
@@ -15,80 +14,82 @@ const useStyles = makeStyles(theme => ({
   videoArea: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr"
-  },
-  titleNClose: {
-    display: "flex"
-  },
-  title: {
-    flexGrow: 1
-  },
-  closeButton: {
-    flexGrow: 0
   }
-}));
+});
 
-const MonitorApp = props => {
-  const classes = useStyles();
-  const [streamIds, setStreamIds] = useState([]);
-  const [videoContexts, setVideoContexts] = useState({});
-
-  const onViewStream = id => event => {
-    //console.log({ id });
-    setStreamIds([...streamIds, id]);
+class MonitorApp extends React.Component {
+  state = {
+    streamDisplayInfos: [],
+    videoContexts: {},
+    streams: []
   };
 
-  const onVideoReady = streamId => player => {
-    console.log({ streamId, player });
+  componentDidMount() {
+    console.log("monitor app");
+    fetch("/api/stream")
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(res.status);
+        }
+        return res.json();
+      })
+      .then(data => {
+        const { state, result } = data;
+        if (state === "OK") {
+          this.setState({ loading: false, streams: result });
+          return;
+        }
+      })
+      .catch(error => this.setState({ loading: false, error }));
+  }
+
+  onViewStream = info => event => {
+    this.setState({ streamDisplayInfos: [...this.state.streamDisplayInfos, info] });
+  };
+
+  onVideoReady = streamId => player => {
     const videoElement = player.children()[0];
-    console.log(videoElement.id);
     const playerId = videoElement.id;
     const url = `ws://localhost:3001/livews/${streamId}`;
-    console.log("before video Context");
-    setVideoContexts({ ...videoContexts, [streamId]: new VideoContext(url, playerId) });
-    console.log("after video Context");
-    //player.fluid(true);
+    this.setState({
+      videoContexts: { ...this.state.videoContexts, [streamId]: new VideoContext(url, playerId) }
+    });
     player.aspectRatio("16:9");
-    //player.play();
-    //videoElement.play();
   };
 
-  const onVideoClose = streamId => event => {
-    console.log({ videoContexts });
-    delete videoContexts[streamId];
-    setVideoContexts({ ...videoContexts });
-    const idx = streamIds.findIndex(item => item === streamId);
-    streamIds.splice(idx, 1);
-    setStreamIds(streamIds);
+  onVideoClose = index => event => {
+    let filtered = [...this.state.streamDisplayInfos];
+    filtered.splice(index, 1);
+    this.setState({ streamDisplayInfos: filtered });
   };
 
-  return (
-    <div className={classes.app}>
-      <h1>감시</h1>
-      <div className={classes.videoArea}>
-        {streamIds.map(streamId => {
-          //console.log({ streamId });
-          return (
-            <Card>
-              <CardContent>
-                <div className={classes.titleNClose}>
-                  <Typography className={classes.title} variant="subtitle1">
-                    Live From Space
-                  </Typography>
-                  <CardActions className={classes.closeButton}>
-                    <Button variant="contained" color="primary" onClick={onVideoClose(streamId)}>
-                      X
-                    </Button>
-                  </CardActions>
-                </div>
-              </CardContent>
-              <VideoPlayer key={streamId} onReady={onVideoReady(streamId)} />
-            </Card>
-          );
-        })}
+  render() {
+    const { classes } = this.props;
+    return (
+      <div className={classes.app}>
+        <div className={classes.videoArea}>
+          {this.state.streamDisplayInfos.map((displayInfo, index) => {
+            console.log({ displayInfo });
+            return (
+              <VideoCard
+                key={index}
+                index={index}
+                displayInfo={displayInfo}
+                onVideoClose={this.onVideoClose}
+                onVideoReady={this.onVideoReady}
+              />
+            );
+          })}
+        </div>
+        <StreamsDrawer
+          onViewStream={this.onViewStream}
+          loading={this.state.loading}
+          error={this.state.error}
+          data={this.state.streams}
+        />
       </div>
-      <StreamsDrawer onViewStream={onViewStream} />
-    </div>
-  );
-};
+    );
+  }
+}
 
-export default MonitorApp;
+export default withStyles(styles)(MonitorApp);

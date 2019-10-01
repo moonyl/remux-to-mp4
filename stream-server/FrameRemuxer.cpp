@@ -21,14 +21,15 @@ void remuxStream(AVFormatContext* ofmt_ctx, AVStream* in_stream, AVPacket& pkt, 
 	//std::cout << "from remux check pts: " << pkt.pts << std::endl;
 	
 	//log_packet(ofmt_ctx, &pkt, "out");
-	if (startPts < 0) {
-		startPts = av_q2d(in_stream->time_base) * pkt.pts;
-		std::cout << "startPts = " << startPts << std::endl;
-	}
-	if (av_q2d(in_stream->time_base) * pkt.pts - startPts > 20.0) {
-		av_packet_unref(&pkt);
-		throw EXCEPTION_MESSAGE(Exception, 0, "test finished");
-	}
+	
+	// if (startPts < 0) {
+	// 	startPts = av_q2d(in_stream->time_base) * pkt.pts;
+	// 	std::cout << "startPts = " << startPts << std::endl;
+	// }
+	// if (av_q2d(in_stream->time_base) * pkt.pts - startPts > 20.0) {
+	// 	av_packet_unref(&pkt);
+	// 	throw EXCEPTION_MESSAGE(Exception, 0, "test finished");
+	// }
 }
 
 QByteArray writeStream(AVFormatContext* ofmt_ctx, RemuxedOutput& remuxedOut, AVPacket& pkt)

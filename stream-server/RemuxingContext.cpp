@@ -56,6 +56,7 @@ void RemuxingContext::sendResult()
 		if (result.isEmpty()) {
 			break;
 		}
+		
 		for (auto socket : sockets()) {
 			socket->sendBinaryMessage(result);
 		}
@@ -92,6 +93,11 @@ void RemuxingContext::addSocket(QWebSocket* socket)
 
 	connect(socket, &QWebSocket::disconnected, this, &RemuxingContext::handleSocketClosed);
 	_sockets << socket;
+}
+
+int RemuxingContext::countOfClients() const
+{
+	return _sockets.size();
 }
 
 QList<QWebSocket*> RemuxingContext::sockets() const
