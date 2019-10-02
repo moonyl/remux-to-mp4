@@ -45,12 +45,15 @@ void RemuxResourceContext::openInput(const char* in_filename)
 	// }
 	
 	//ret = av_dict_set(&inOptions, "avioflags", "direct", 0);
+	//
 	ret = av_dict_set(&inOptions, "fflags", "nobuffer", 0);
 	if (ret < 0) {
 		throw EXCEPTION_MESSAGE(Exception, ret, "Error on setting the option of fflags");
 	}
+	// 
 	//ret = av_dict_set(&inOptions, "max_delay", "100000", 0);
 	//ret = av_dict_set(&inOptions, "fflags", "autobsf", 0);
+	
 	ret = av_dict_set(&inOptions, "flags", "low_delay", 0);
 	if (ret < 0) {
 		throw EXCEPTION_MESSAGE(Exception, ret, "Error on setting the option of flags");
