@@ -66,3 +66,5 @@ stream-server/out/build/x64-Debug/.cmake/api/v1/query/client-MicrosoftVS/query.j
 
 stream-server/out/
 web-stream-app/debug.log
+
+web-video-player/debug.log
