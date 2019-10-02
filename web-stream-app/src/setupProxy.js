@@ -6,8 +6,13 @@ module.exports = function(app) {
       target: "http://localhost:3000/"
     })
   );
+  // app.use(
+  //   proxy("/publish", {
+  //     target: "http://localhost:3000/"
+  //   })
+  // );
   app.use(
-    proxy("/publish", {
+    proxy("/auth", {
       target: "http://localhost:3000/"
     })
   );

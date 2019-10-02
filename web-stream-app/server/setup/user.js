@@ -5,15 +5,14 @@ if (process.env.APPDATA) {
   LinvoDB.dbPath = process.env.HOME + "/.local/share/web-stream-server";
 }
 
-const Stream = new LinvoDB("Stream", {
-  title: String,
-  type: String,
-  user: String,
+const User = new LinvoDB("User", {
+  email: {
+    type: String,
+    index: { unique: true }
+  },
   password: String,
-  url: String,
-  service: String,
-  profiles: [{ codec: String, name: String, width: Number, height: Number, url: String }],
-  profileSel: Number
+  firstName: String,
+  lastName: String
 });
 
-module.exports = Stream;
+module.exports = User;

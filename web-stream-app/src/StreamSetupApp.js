@@ -6,7 +6,7 @@ import StreamsTable from "./components/StreamsTable";
 
 const styles = theme => ({
   app: {
-    position: "fixed",
+    position: "relative",
     top: theme.overrides.heightOffset
   }
 });
@@ -106,21 +106,8 @@ class StreamSetupApp extends React.Component {
     const { value } = event.target;
     //console.log({ name, value });
     const { streamInfo } = this.state;
-    if (name === "type") {
-      this.setState({ streamInfo: { ...streamInfo, type: value } });
-    } else if (name === "title") {
-      this.setState({ streamInfo: { ...streamInfo, title: value } });
-    } else if (name === "service") {
-      this.setState({ streamInfo: { ...streamInfo, service: value } });
-    } else if (name === "profileSel") {
-      this.setState({ streamInfo: { ...streamInfo, profileSel: value } });
-    } else if (name === "url") {
-      this.setState({ streamInfo: { ...streamInfo, url: value } });
-    } else if (name === "user") {
-      this.setState({ streamInfo: { ...streamInfo, user: value } });
-    } else if (name === "password") {
-      this.setState({ streamInfo: { ...streamInfo, password: value } });
-    }
+
+    this.setState({ streamInfo: { ...streamInfo, [name]: value } });
   };
 
   render() {

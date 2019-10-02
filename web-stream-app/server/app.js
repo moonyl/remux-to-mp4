@@ -2,10 +2,14 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
 const api = require("./routes/index");
+import auth from "./routes/auth";
+import passport from "passport";
 require("dotenv").config();
 
 app.use(bodyParser.json());
 app.use("/api", api);
+app.use(passport.initialize());
+app.use("/auth", auth);
 app.use("/publish", express.static(__dirname + "/publish/"));
 
 const port = process.env.SERVER_PORT || 3003;
