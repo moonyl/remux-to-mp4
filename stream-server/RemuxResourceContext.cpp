@@ -31,6 +31,15 @@ RemuxResourceContext::~RemuxResourceContext()
 	}
 }
 
+// static int interrupt_cb(void* ctx)
+// {
+// 	const char* param = static_cast<const char*>(ctx);
+// 	std::cout << __FUNCTION__ << param << std::endl;
+// 	return 0;
+// }
+
+//static const AVIOInterruptCB int_cb = { interrupt_cb, "test" };
+
 void RemuxResourceContext::openInput(const char* in_filename)
 {
 	AVDictionary* inOptions = NULL;
@@ -39,6 +48,11 @@ void RemuxResourceContext::openInput(const char* in_filename)
 		throw EXCEPTION_MESSAGE(Exception, ret, "Error on setting the option of rtsp_transport");
 	}
 
+	ret = av_dict_set(&inOptions, "stimeout", "2000000", 0);
+	if (ret < 0) {
+		throw EXCEPTION_MESSAGE(Exception, ret, "Error on setting the option of stimeout");
+	}
+	
 	// ret = av_dict_set(&inOptions, "allowed_media_types", "video", 0);
 	// if (ret < 0) {
 	// 	throw EXCEPTION_MESSAGE(Exception, ret, "Error on setting the option of allowed_media_types");
@@ -58,6 +72,10 @@ void RemuxResourceContext::openInput(const char* in_filename)
 	if (ret < 0) {
 		throw EXCEPTION_MESSAGE(Exception, ret, "Error on setting the option of flags");
 	}
+
+	// _ifmtCtx = avformat_alloc_context();
+	// _ifmtCtx->interrupt_callback = int_cb;
+
 	
 	if ((ret = avformat_open_input(&_ifmtCtx, in_filename, nullptr, &inOptions)) < 0) {
 		throw EXCEPTION_MESSAGE(Exception, ret, "Could not open input file");

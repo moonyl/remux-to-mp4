@@ -50,6 +50,7 @@ public:
 	bool prepared() const;
 
 	bool isStreamEnded() const;
+	bool hasConnection() const;
 
 signals:
 	void singleStepFinished();

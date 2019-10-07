@@ -1,6 +1,7 @@
 import React from "react";
 import MP4Box from "mp4box";
 import StreamPlayer from "./StreamerPlayer";
+import StreamVideo from "./StreamVideo";
 
 class App extends React.Component {
   buffer = [];
@@ -12,13 +13,12 @@ class App extends React.Component {
   componentDidMount() {
     // this.configMediaSource();
     // this.configVideoElement();
-
     // this.configMp4box();
     // const streamId = "39cee652-057f-464b-90de-53d12841e026";
     // const url = `ws://localhost:3001/livews/${streamId}`;
     // this.configWebSocket(url);
-    this.streamPlayer = new StreamPlayer();
-    this.streamPlayer.connect();
+    //this.streamPlayer = new StreamPlayer();
+    //this.streamPlayer.connect();
   }
 
   configVideoElement() {
@@ -135,7 +135,12 @@ class App extends React.Component {
   }
 
   render() {
-    return <video id="video-0"></video>;
+    return (
+      <>
+        <StreamVideo />
+        <video id="video-0"></video>
+      </>
+    );
   }
 }
 

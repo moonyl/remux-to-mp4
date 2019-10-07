@@ -1,7 +1,8 @@
 import React from "react";
-import VideoPlayer from "@moonyl/react-video-js-player";
+//import VideoPlayer from "@moonyl/react-video-js-player";
 import { Card, CardContent, CardActions, Typography, Button } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
+import StreamVideoNew from "./StreamVideoNew";
 
 const useStyles = makeStyles(theme => ({
   titleNClose: {
@@ -32,7 +33,8 @@ const VideoCard = ({ displayInfo, index, onVideoClose, onVideoReady }) => {
           </CardActions>
         </div>
       </CardContent>
-      <VideoPlayer key={displayInfo.id} onReady={onVideoReady(displayInfo.id)} />
+      {/* <VideoPlayer key={displayInfo.id} onReady={onVideoReady(displayInfo.id)} /> */}
+      <StreamVideoNew path={`livews/${displayInfo.id}`} />
     </Card>
   );
 };

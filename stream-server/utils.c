@@ -16,7 +16,7 @@ void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt, const char 
            pkt->stream_index);
 }
 
-char* av_error2char(int errorNum)
+const char* av_error2char(int errorNum, char *buffer, size_t bufferSize)
 {
-    return av_err2str(errorNum);
+	return av_make_error_string(buffer, bufferSize, errorNum);
 }

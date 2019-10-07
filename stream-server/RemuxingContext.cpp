@@ -13,6 +13,7 @@ QByteArray doRemux(RemuxingContext* remuxer)
 	
 };
 
+QElapsedTimer timer;
 RemuxingContext::RemuxingContext(const char* in_filename, QObject* parent):
 	QObject(parent),
 	_inFileName(in_filename),
@@ -37,8 +38,8 @@ void RemuxingContext::setUrl(const char* inFileName)
 }
 
 void RemuxingContext::asyncRemux()
-{
-	if (_futureWatcher.isFinished() && _tryRemuxing == false) {
+{	
+	if (_futureWatcher.isFinished() && _tryRemuxing == false) {		
 		auto future = QtConcurrent::run(doRemux, this);
 		_futureWatcher.setFuture(future);
 		_tryRemuxing = true;
@@ -113,12 +114,17 @@ bool RemuxingContext::prepared() const
 bool RemuxingContext::isStreamEnded() const
 {
 	// 이름도 할당되지 않고 스트림이 끝났다고 판단하면, 초기상태이다.
+	//if (_ended && (!_inFileName.empty()) && (_futureWatcher.isFinished() || _futureWatcher.isCanceled())) {
 	if (_ended && (!_inFileName.empty())) {
 		std::cout << "stream ended" << std::endl;
 		return true;
 	}
 	return false;
 	//return _ended && (!_inFileName.empty());
+}
+bool RemuxingContext::hasConnection() const
+{
+	return !_sockets.isEmpty();
 }
 
 void RemuxingContext::changeState(RemuxingState* state)
@@ -143,4 +149,8 @@ void RemuxingContext::handleSocketClosed()
 {
 	QWebSocket* pClient = qobject_cast<QWebSocket*>(sender());
 	_sockets.remove(pClient);
+	if (_sockets.isEmpty()) {
+		//_futureWatcher.cancel();
+		emit singleStepFinished();
+	}	
 }

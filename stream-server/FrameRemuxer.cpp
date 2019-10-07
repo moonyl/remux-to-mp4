@@ -4,6 +4,7 @@ extern "C"	{
 #include <libavcodec/avcodec.h>
 #include <libswresample/swresample.h>
 #include <libavutil/audio_fifo.h>
+	const char* av_error2char(int errorNum, char* buf, size_t bufSize);
 }
 
 #include <iostream>
@@ -32,14 +33,35 @@ void remuxStream(AVFormatContext* ofmt_ctx, AVStream* in_stream, AVPacket& pkt, 
 	// }
 }
 
+class SafeAvPacketUnreference
+{
+	AVPacket& _pkt;
+public:
+	SafeAvPacketUnreference(AVPacket& pkt) : _pkt(pkt) {}
+	~SafeAvPacketUnreference()
+	{
+		av_packet_unref(&_pkt);
+	}
+};
+
+std::string avError2String(int ret)
+{
+	char errorMsg[AV_ERROR_MAX_STRING_SIZE];
+	av_error2char(ret, errorMsg, AV_ERROR_MAX_STRING_SIZE);
+	return std::string(errorMsg);
+}
+
 QByteArray writeStream(AVFormatContext* ofmt_ctx, RemuxedOutput& remuxedOut, AVPacket& pkt)
 {
+	SafeAvPacketUnreference safer(pkt);
 	int ret = av_interleaved_write_frame(ofmt_ctx, &pkt);
 	if (ret < 0) {
+		//av_packet_unref(&pkt);		
+		std::cout << avError2String(ret).c_str() << std::endl;
 		throw EXCEPTION_MESSAGE(Exception, ret, "Error muxing packet");
 	}
 
-	av_packet_unref(&pkt);
+	//av_packet_unref(&pkt);
 
 	return remuxedOut.update();
 }
@@ -112,10 +134,9 @@ QByteArray FrameRemuxer::doRemux()
 		_pts = _pkt.pts;
 	}
 
-	//{
-		//QMutexLocker locker(&frameWriteMutex);
-		return writeStream(ofmtCtx, remuxedOut, _pkt);
-	//}
+
+	return writeStream(ofmtCtx, remuxedOut, _pkt);
+
 }
 
 class DecodingJob
@@ -364,13 +385,13 @@ FrameRemuxer::RemuxedFrame FrameRemuxer::remux()
 	//elapsedTimer.start();
 	AVFormatContext* ifmtCtx = _resource.inputFormatContext();
 
-	//{
-		//QMutexLocker locker(&frameReadMutex);
-		int ret = av_read_frame(ifmtCtx, &_pkt);
-		if (ret < 0) {
-			throw EXCEPTION_MESSAGE(Exception, ret, "av_read_frame error");
-		}
-	//}
+	//std::cout << "before read frame" << std::endl;
+	int ret = av_read_frame(ifmtCtx, &_pkt);
+	//std::cout << "after read frame" << std::endl;
+	SafeAvPacketUnreference safer(_pkt);
+	if (ret < 0) {
+		throw EXCEPTION_MESSAGE(Exception, ret, "av_read_frame error");
+	}
 
 	//std::cout << "after read: " << elapsedTimer.elapsed() << std::endl;
 	
@@ -379,7 +400,7 @@ FrameRemuxer::RemuxedFrame FrameRemuxer::remux()
 		in_stream->codecpar->codec_type != AVMEDIA_TYPE_VIDEO &&
 		in_stream->codecpar->codec_type != AVMEDIA_TYPE_SUBTITLE) {
 		std::cout << "cannot mux, maybe camera event?" << std::endl;
-		av_packet_unref(&_pkt);
+		//av_packet_unref(&_pkt);
 		return { QByteArray(), -1 };
 	}
 
@@ -414,6 +435,6 @@ FrameRemuxer::RemuxedFrame FrameRemuxer::remux()
 #endif	
 		
 	//std::cout << "pts: " << av_q2d(in_stream->time_base) * pts << std::endl;
-	av_packet_unref(&_pkt);
+	//av_packet_unref(&_pkt);
 	return { result, av_q2d(in_stream->time_base) * pts };
 }

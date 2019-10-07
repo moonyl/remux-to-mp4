@@ -52,6 +52,13 @@ QByteArray RemuxStream::remux(RemuxingContext* context)
 			context->changeState(new TrailerWrite);
 			return QByteArray();
 		}
+		else if (e.message() == "Error muxing packet") {
+			// dts 때문에 error가 발생함. 무시하고 다음 프레임을 처리한다.
+			return QByteArray();
+		}		
+		std::cout << "exception: " << qPrintable(e.message()) << std::endl;
+		context->changeState(new TrailerWrite);
+		return QByteArray();		
 	}
 	return QByteArray();
 

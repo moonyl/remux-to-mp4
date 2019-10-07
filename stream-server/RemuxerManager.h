@@ -19,6 +19,7 @@ class RemuxerManager : public QMap<QUuid, QSharedPointer<RemuxingContext>>
 	StreamSetupCommunicator& _setupCommunicator;
 	RemuxScheduler _scheduler;
 	QMap<QUuid, QWebSocket> _sockets;
+	bool _disconnectRequested = false;
 
 public:
 	RemuxerManager(StreamSetupCommunicator& setupCommunicator) : _setupCommunicator(setupCommunicator), _scheduler(*this)
@@ -44,10 +45,23 @@ public:
 			insert(cameraId, remuxer);			
 		}
 		value(cameraId)->addSocket(socket);
+		// QObject::connect(socket, &QWebSocket::disconnected, [this]()
+		// 	{
+		// 		_disconnectRequested = true;
+		// 	});
 	}
 
 	void asynRemux()
 	{
+		// if (_disconnectRequested) {
+		// 	for (const auto& key : keys()) {
+		// 		if (!value(key)->hasConnection()) {
+		// 			std::cout << "try remove in asyncRemux" << std::endl;
+		// 			remove(key);
+		// 		}
+		// 	}
+		// 	_disconnectRequested = false;
+		// }
 		for (const auto& remuxer: remuxers()) {
 			remuxer->asyncRemux();			
 		}		
@@ -66,6 +80,7 @@ public:
 	{
 		for (const auto& key : keys()) {
 			if (value(key)->isStreamEnded()) {
+				std::cout << "remove stream" << std::endl;
 				remove(key);
 			}
 		}
