@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Stream = require("../setup/stream.js");
 const uuid = require("uuid/v4");
+const uuidv5 = require("uuid/v5");
 
 router.get("/", (req, res) => {
   res.json({ data: "this is index." });
@@ -25,6 +26,26 @@ router.get("/stream/:id", (req, res) => {
       }
     });
   });
+});
+
+router.post("/stream/:id", (req, res) => {
+  const { id } = req.params;
+  const { cmd } = req.body;
+  //console.log({ id, cmd });
+  if (cmd === "delete") {
+    Stream.findOne({ _id: id }, (error, doc) => {
+      if (error) {
+        console.error(error);
+        res.send({ state: "NG", error });
+      }
+      if (doc) {
+        doc.remove(() => {
+          console.log("removed");
+          res.send({ state: "OK" });
+        });
+      }
+    });
+  }
 });
 
 router.get("/stream", (req, res) => {
@@ -53,7 +74,12 @@ router.post("/stream", (req, res) => {
   let _id = streamId;
   if (!streamId) {
     console.log("new case");
-    _id = uuid();
+    const { type, service } = streamInfo;
+    if (type === "onvif") {
+      _id = uuidv5(service, uuidv5.URL);
+    } else {
+      _id = uuid();
+    }
     //_id = "e3f3408d-6f8b-430c-926b-3e7e8a5f2aec";
   }
   Stream.find({ _id }, (error, result) => {

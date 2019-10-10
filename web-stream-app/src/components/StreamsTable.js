@@ -6,15 +6,18 @@ import {
   TableCell,
   Checkbox,
   TableHead,
-  TableSortLabel
+  TableSortLabel,
+  Fab
 } from "@material-ui/core";
+import EditIcon from "@material-ui/icons/Edit";
 
 const headRows = [
   { id: "title", numeric: false, disablePadding: false, label: "이름" },
   { id: "type", numeric: false, disablePadding: false, label: "타입" },
   { id: "url", numeric: false, disablePadding: false, label: "URL" },
   { id: "ip", numeric: false, disablePadding: false, label: "IP" },
-  { id: "profile", numeric: true, disablePadding: false, label: "프로파일" }
+  { id: "profile", numeric: false, disablePadding: false, label: "프로파일" },
+  { id: "edit", numeric: false, disablePadding: false, label: "편집" }
 ];
 
 const StreamTableHead = props => (
@@ -36,8 +39,7 @@ const StreamTableHead = props => (
   </TableHead>
 );
 
-const StreamsTable = ({ streams }) => {
-  console.log({ streams });
+const StreamsTable = ({ streams, onSelectChange, onEdit }) => {
   return (
     <Table>
       <StreamTableHead />
@@ -46,13 +48,19 @@ const StreamsTable = ({ streams }) => {
           streams.map((stream, index) => (
             <TableRow key={index}>
               <TableCell padding="checkbox">
-                <Checkbox />
+                {/* <Checkbox onChange={onSelect(stream.id)} /> */}
+                <Checkbox onChange={onSelectChange(stream.id)} />
               </TableCell>
               <TableCell align="left">{stream.title}</TableCell>
               <TableCell align="left">{stream.type}</TableCell>
               <TableCell align="left">{stream.url}</TableCell>
               <TableCell align="left">{"IP"}</TableCell>
               <TableCell align="left">{"profile content"}</TableCell>
+              <TableCell align="left">
+                <Fab size="small" color="primary" onClick={onEdit(stream.id)}>
+                  <EditIcon />
+                </Fab>
+              </TableCell>
             </TableRow>
           ))}
       </TableBody>

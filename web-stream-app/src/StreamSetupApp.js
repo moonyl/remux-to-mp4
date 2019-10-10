@@ -27,7 +27,8 @@ class StreamSetupApp extends React.Component {
     },
     streams: [],
     openDiscovery: false,
-    discovered: []
+    discovered: [],
+    selected: []
   };
 
   onCancel = () => {
@@ -105,6 +106,15 @@ class StreamSetupApp extends React.Component {
     this.setState({ openEdit: true, streamId, streamInfo });
   };
 
+  onStreamEdit = id => event => {
+    console.log({ id });
+    console.log("streams:", this.state.streams);
+    const selected = this.state.streams.find(elem => elem.streamId === id);
+    const { streamInfo } = selected;
+
+    this.setState({ openEdit: true, streamId: id, streamInfo });
+  };
+
   discovery = () => {
     this.setState({ openDiscovery: true });
     const route = "/onvif/discovery";
@@ -113,12 +123,44 @@ class StreamSetupApp extends React.Component {
         return reply.json();
       })
       .then(json => {
-        const { state, result } = json;
+        const { result } = json;
         this.setState({ discovered: result.devices });
       })
       .catch(error => {
         console.error(error);
       });
+  };
+
+  onDiscoveryAdd = selected => event => {
+    console.log("selected: ", selected);
+    this.setState({ openDiscovery: false });
+    // TODO : 스트림을 SETUP에 추가한다.
+    const route = "/api/stream";
+    selected.map(item => {
+      const streamInfo = {
+        type: "onvif",
+        service: item
+      };
+      const setting = { streamId: "", streamInfo };
+      fetch(route, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(setting)
+      })
+        .then(result => {
+          console.log(result);
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    });
+  };
+
+  onDiscoveryCancel = () => {
+    console.log("onDiscoveryCancel");
+    this.setState({ openDiscovery: false });
   };
 
   onValueChange = name => event => {
@@ -127,6 +169,46 @@ class StreamSetupApp extends React.Component {
     const { streamInfo } = this.state;
 
     this.setState({ streamInfo: { ...streamInfo, [name]: value } });
+  };
+
+  deleteStream = event => {
+    console.log("selected: ", this.state.selected);
+
+    this.state.selected.forEach(item => {
+      const setting = { cmd: "delete" };
+      const route = `/api/stream/${item}`;
+      fetch(route, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(setting)
+      })
+        .then(result => {
+          console.log(result);
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    });
+    this.setState({ selected: [] });
+  };
+
+  onStreamSelectChange = id => event => {
+    const { checked } = event.target;
+    if (checked) {
+      this.setState({ selected: [...this.state.selected, id] });
+    } else {
+      const filtered = this.state.selected.filter(item => {
+        if (id === item) {
+          return false;
+        }
+        return true;
+      });
+      this.setState({ selected: filtered });
+    }
+    console.log({ id });
+    console.log(event.target.checked);
   };
 
   render() {
@@ -142,13 +224,20 @@ class StreamSetupApp extends React.Component {
         <Button variant="outlined" color="primary" onClick={this.discovery}>
           스트림 검색
         </Button>
+        <Button variant="outlined" color="primary" onClick={this.deleteStream}>
+          삭제
+        </Button>
         <Button variant="outlined" color="primary" onClick={this.findAllStream}>
           스트림 업데이트
         </Button>
         <Button variant="outlined" color="primary" onClick={this.editStream}>
           수정
         </Button>
-        <StreamsTable streams={this.state.tableData} />
+        <StreamsTable
+          streams={this.state.tableData}
+          onSelectChange={this.onStreamSelectChange}
+          onEdit={this.onStreamEdit}
+        />
         <StreamEditDialog
           {...streamInfo}
           profileLoading={false}
@@ -158,7 +247,12 @@ class StreamSetupApp extends React.Component {
           onAuth={this.onAuth}
           onValueChange={this.onValueChange}
         />
-        <DiscoveryDialog open={this.state.openDiscovery} streams={this.state.discovered} />
+        <DiscoveryDialog
+          open={this.state.openDiscovery}
+          streams={this.state.discovered}
+          onApply={this.onDiscoveryAdd}
+          onCancel={this.onDiscoveryCancel}
+        />
       </div>
     );
   }

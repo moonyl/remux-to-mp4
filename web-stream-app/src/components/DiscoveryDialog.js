@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import {
   Dialog,
@@ -54,8 +54,28 @@ const DiscoveryTableHead = props => (
   </TableHead>
 );
 
-const DiscoveryDialog = ({ open, onCancel, onSave, streams }) => {
+const DiscoveryDialog = ({ open, onCancel, onApply, streams }) => {
   const classes = useStyles();
+  const [selected, setSelected] = useState([]);
+
+  const onChange = xaddr => event => {
+    //console.log({ xaddr });
+    //console.log("check:", event.target.checked);
+    const { checked } = event.target;
+    if (checked) {
+      setSelected([...selected, xaddr]);
+    } else {
+      const remade = selected.filter(item => {
+        if (item === xaddr) {
+          return false;
+        }
+        return true;
+      });
+      //console.log({ remade });
+      setSelected(remade);
+    }
+  };
+
   return (
     <Dialog open={open} maxWidth="md">
       <DialogTitle>스트림 검색</DialogTitle>
@@ -67,7 +87,7 @@ const DiscoveryDialog = ({ open, onCancel, onSave, streams }) => {
               streams.map((stream, index) => (
                 <TableRow key={index}>
                   <TableCell padding="checkbox">
-                    <Checkbox />
+                    <Checkbox onChange={onChange(stream.xaddr)} />
                   </TableCell>
                   <TableCell align="left">{stream.ip}</TableCell>
                   <TableCell align="left">{stream.model}</TableCell>
@@ -88,7 +108,7 @@ const DiscoveryDialog = ({ open, onCancel, onSave, streams }) => {
         <Button onClick={onCancel} color="primary">
           취소
         </Button>
-        <Button onClick={onSave} color="primary">
+        <Button onClick={onApply(selected)} color="primary">
           저장
         </Button>
       </DialogActions>
