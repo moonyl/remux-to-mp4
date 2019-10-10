@@ -16,4 +16,9 @@ module.exports = function(app) {
       target: "http://localhost:3000/"
     })
   );
+  app.use(
+    proxy("/onvif", {
+      target: "http://localhost:3000/"
+    })
+  );
 };

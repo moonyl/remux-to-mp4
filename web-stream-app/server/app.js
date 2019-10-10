@@ -4,12 +4,14 @@ const app = express();
 const api = require("./routes/index");
 import auth from "./routes/auth";
 import passport from "passport";
+import onvif from "./routes/onvif";
 require("dotenv").config();
 
 app.use(bodyParser.json());
 app.use("/api", api);
 app.use(passport.initialize());
 app.use("/auth", auth);
+app.use("/onvif", onvif);
 app.use("/publish", express.static(__dirname + "/publish/"));
 
 const port = process.env.SERVER_PORT || 3003;
@@ -24,18 +26,4 @@ server.listen(path, () => {
 });
 
 const StreamServerHandlers = require("./ipc/streamServer");
-// server.on("connection", socket => {
-//   //console.log(socket);
-//   console.log("request somewhere");
-//   socket.on("data", data => {
-//     const request = JSON.parse(data);
-//     //console.log({ request });
-//     const { cmd, param } = request;
-//     if (cmd === "stream") {
-//       const { id } = param;
-//       console.log({ param });
-
-//     }
-//   });
-// });
 server.on("connection", StreamServerHandlers.handleStreamRequest);

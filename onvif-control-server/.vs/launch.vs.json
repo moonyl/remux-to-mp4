@@ -1,0 +1,17 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "name": "onvif_control_server",
+      "env": "PATH=${env.QT_ROOT}\\bin;${projectDir}\\refs\\openssl\\x64\\bin;${env.PATH}"
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "name": "CMakeLists.txt"
+    }
+  ]
+}

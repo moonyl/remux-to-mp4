@@ -4,7 +4,6 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLocalSocket>
-#include <QQueue>
 #include "RemuxingContext.h"
 #include <iostream>
 #include <QTimer>
@@ -17,25 +16,7 @@ class StreamSetupCommunicator : public QObject
 	QLocalSocket _setupClient;
 	QMap<QUuid, QString> _camIdMap;
 
-	// class RemuxingContextBuilder
-	// {
-	// 	QString _cameraId;
-	// public:
-	// 	RemuxingContextBuilder(const QString& cameraId) : _cameraId(cameraId) {}
-	// 	~RemuxingContextBuilder() { std::cout << __FUNCTION__ << std::endl; }
-	// 	QSharedPointer<RemuxingContext> build(const QUrl& url)
-	// 	{
-	// 		std::cout << "check: " << qPrintable(url.toString(QUrl::None)) << std::endl;
-	// 		QSharedPointer<RemuxingContext> remuxer(new RemuxingContext(qPrintable(url.toString(QUrl::None))));
-	// 		return remuxer;
-	// 	}
-	// 	QString cameraId() const { return _cameraId; }
-	// };
-
-	//QQueue<QSharedPointer<RemuxingContextBuilder>> _requested;
-
 signals:
-	//void created(const QString& cameraId, QSharedPointer<RemuxingContext> context);
 	void created(const QString& cameraId, const QUrl &url);
 
 public:

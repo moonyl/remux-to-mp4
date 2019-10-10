@@ -12,6 +12,11 @@
       "type": "default",
       "project": "CMakeLists.txt",
       "name": "CMakeLists.txt"
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "name": "CMakeLists.txt(1)"
     }
   ]
 }

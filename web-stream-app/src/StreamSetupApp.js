@@ -3,6 +3,7 @@ import Button from "@material-ui/core/Button";
 import StreamEditDialog from "./components/StreamEditDialog";
 import withStyles from "@material-ui/core/styles/withStyles";
 import StreamsTable from "./components/StreamsTable";
+import DiscoveryDialog from "./components/DiscoveryDialog";
 
 const styles = theme => ({
   app: {
@@ -13,7 +14,7 @@ const styles = theme => ({
 
 class StreamSetupApp extends React.Component {
   state = {
-    open: false,
+    openEdit: false,
     streamId: "",
     streamInfo: {
       type: "rtsp",
@@ -24,15 +25,17 @@ class StreamSetupApp extends React.Component {
       user: "",
       password: ""
     },
-    streams: []
+    streams: [],
+    openDiscovery: false,
+    discovered: []
   };
 
   onCancel = () => {
-    this.setState({ open: false });
+    this.setState({ openEdit: false });
   };
 
   onSave = () => {
-    this.setState({ open: false });
+    this.setState({ openEdit: false });
     console.log("location: ", window.location.origin);
     const route = "/api/stream";
     const { streamId, streamInfo } = this.state;
@@ -57,7 +60,7 @@ class StreamSetupApp extends React.Component {
   }
 
   findAllStream = () => {
-    this.setState({ open: false });
+    this.setState({ openEdit: false });
     const route = "/api/stream";
     fetch(route)
       .then(reply => {
@@ -84,7 +87,7 @@ class StreamSetupApp extends React.Component {
 
   addStream = () => {
     //console.log("handleClickOpen");
-    this.setState({ open: true, streamId: "", streamInfo: { type: "rtsp" } });
+    this.setState({ openEdit: true, streamId: "", streamInfo: { type: "rtsp" } });
   };
 
   editStream = () => {
@@ -99,7 +102,23 @@ class StreamSetupApp extends React.Component {
       user: "",
       password: ""
     };
-    this.setState({ open: true, streamId, streamInfo });
+    this.setState({ openEdit: true, streamId, streamInfo });
+  };
+
+  discovery = () => {
+    this.setState({ openDiscovery: true });
+    const route = "/onvif/discovery";
+    fetch(route)
+      .then(reply => {
+        return reply.json();
+      })
+      .then(json => {
+        const { state, result } = json;
+        this.setState({ discovered: result.devices });
+      })
+      .catch(error => {
+        console.error(error);
+      });
   };
 
   onValueChange = name => event => {
@@ -118,24 +137,28 @@ class StreamSetupApp extends React.Component {
     return (
       <div className={classes.app}>
         <Button variant="outlined" color="primary" onClick={this.addStream}>
-          Add stream
+          추가
         </Button>
-        <Button variant="outlined" color="primary" onClick={this.editStream}>
-          Edit stream
+        <Button variant="outlined" color="primary" onClick={this.discovery}>
+          스트림 검색
         </Button>
         <Button variant="outlined" color="primary" onClick={this.findAllStream}>
-          update
+          스트림 업데이트
+        </Button>
+        <Button variant="outlined" color="primary" onClick={this.editStream}>
+          수정
         </Button>
         <StreamsTable streams={this.state.tableData} />
         <StreamEditDialog
           {...streamInfo}
           profileLoading={false}
-          open={this.state.open}
+          open={this.state.openEdit}
           onCancel={this.onCancel}
           onSave={this.onSave}
           onAuth={this.onAuth}
           onValueChange={this.onValueChange}
         />
+        <DiscoveryDialog open={this.state.openDiscovery} streams={this.state.discovered} />
       </div>
     );
   }

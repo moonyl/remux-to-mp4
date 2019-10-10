@@ -40,6 +40,7 @@ out/build/x64-Debug/
 .vs/remux-to-mp4/v16/
 
 .vs/remux-to-mp4/config/
+onvif-control-server/.vs/onvif-control-server/
 
 *.sqlite
 
@@ -65,6 +66,13 @@ stream-server/.vs/stream-server/config/applicationhost.config
 stream-server/out/build/x64-Debug/.cmake/api/v1/query/client-MicrosoftVS/query.json
 
 stream-server/out/
+onvif-control-server/out/
 web-stream-app/debug.log
 
 web-video-player/debug.log
+
+onvif-control-server/.vs/ProjectSettings.json
+
+onvif-control-server/.vs/VSWorkspaceState.json
+
+onvif-control-server/refs/
