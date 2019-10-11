@@ -57,9 +57,15 @@ class MonitorApp extends React.Component {
     player.aspectRatio("16:9");
   };
 
-  onVideoClose = index => event => {
-    let filtered = [...this.state.streamDisplayInfos];
-    filtered.splice(index, 1);
+  onVideoClose = streamId => event => {
+    const filtered = this.state.streamDisplayInfos.filter(info => {
+      if (info.id === streamId) {
+        return false;
+      }
+      return true;
+    });
+    // let filtered = [...this.state.streamDisplayInfos];
+    // filtered.splice(index, 1);
     this.setState({ streamDisplayInfos: filtered });
   };
 
@@ -68,12 +74,11 @@ class MonitorApp extends React.Component {
     return (
       <div className={classes.app}>
         <div className={classes.videoArea}>
-          {this.state.streamDisplayInfos.map((displayInfo, index) => {
+          {this.state.streamDisplayInfos.map(displayInfo => {
             console.log({ displayInfo });
             return (
               <VideoCard
-                key={index}
-                index={index}
+                key={displayInfo.id}
                 displayInfo={displayInfo}
                 onVideoClose={this.onVideoClose}
                 onVideoReady={this.onVideoReady}

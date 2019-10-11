@@ -16,9 +16,9 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const VideoCard = ({ displayInfo, index, onVideoClose, onVideoReady }) => {
+const VideoCard = ({ displayInfo, onVideoClose }) => {
   const classes = useStyles();
-
+  console.log("videoCard:", { displayInfo });
   return (
     <Card>
       <CardContent>
@@ -27,7 +27,7 @@ const VideoCard = ({ displayInfo, index, onVideoClose, onVideoReady }) => {
             {displayInfo.title}
           </Typography>
           <CardActions className={classes.closeButton}>
-            <Button variant="contained" color="primary" onClick={onVideoClose(index)}>
+            <Button variant="contained" color="primary" onClick={onVideoClose(displayInfo.id)}>
               X
             </Button>
           </CardActions>

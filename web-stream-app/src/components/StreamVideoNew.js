@@ -1,6 +1,7 @@
 import React from "react";
 import MP4Box from "mp4box";
 import VideoPlayer from "@moonyl/react-video-js-player";
+import { Button } from "@material-ui/core";
 
 const createWebSocket = (protocol, hostname, port, path) => {
   var s = null;
@@ -132,8 +133,13 @@ const keepAlive = ws => {
 class StreamVideoNew extends React.Component {
   buffer = [];
 
+  componentDidMount() {
+    console.log("componentDidMount");
+  }
+
   componentWillUnmount() {
-    console.log("componentWillUnmount");
+    console.log("componentWillUnmount", this.props.path);
+
     this.releaseSourceBuffer();
     this.releaseWebSocket();
     this.mimeType = "";
@@ -142,6 +148,7 @@ class StreamVideoNew extends React.Component {
   }
 
   onReady = player => {
+    console.log("check, onReady");
     const { path } = this.props;
     this.videoElement = document.querySelector(`#${player.id()} video`);
     this.configWebSocket(path);
@@ -151,29 +158,34 @@ class StreamVideoNew extends React.Component {
 
   handleMessage = msg => {
     //console.log({ msg });
-    if (this.openCheck === true) {
-      const { data } = msg;
-      this.mimeType = detectMime(data);
-      console.log("mime: ", this.mimeType);
-      this.mimeDetected = true;
-
-      this.closeRepeat = setInterval(this.close, 10000);
-      this.keepAliveRepeat = setInterval(keepAlive.bind(null, this.webSocket), 1000);
-      this.play();
-      this.openCheck = false;
-    }
-
-    if (true === this.disconnected) {
-      return;
-    }
-    //console.log("disconnected check");
     const { data } = msg;
     if (data instanceof ArrayBuffer) {
+      if (this.openCheck === true) {
+        this.mimeType = detectMime(data);
+        console.log("mime: ", this.mimeType);
+        this.mimeDetected = true;
+
+        this.closeRepeat = setInterval(this.close, 10000);
+        this.keepAliveRepeat = setInterval(keepAlive.bind(null, this.webSocket), 1000);
+        this.play();
+        this.openCheck = false;
+      }
+
+      if (true === this.disconnected) {
+        return;
+      }
+      //console.log("disconnected check");
+
       handleSourceBuffer(this.sourceBuffer, this.buffer, data, this.appendSourceBuffer);
       doFlowContrl(this.sourceBuffer, this.videoElement);
     } else {
       this.handleTextMessages(JSON.parse(data));
     }
+  };
+
+  handleTextMessages = data => {
+    const { pts } = data;
+    this.startPts = pts;
   };
 
   onWsOpen = () => {
@@ -239,7 +251,26 @@ class StreamVideoNew extends React.Component {
   };
 
   appendSourceBuffer = () => {
+    //console.log("currentTime: ", this.videoElement.currentTime);
+    if (this.startPts > 0) {
+      // console.log("before play");
+      // this.videoElement.play().then(() => {
+      //   console.log("play OK");
+      // });
+      console.log("readyState: ", this.videoElement.readyState);
+      console.log("startPts: ", this.startPts);
+      if (this.videoElement.readyState === 1) {
+        //this.videoElement.play();
+        this.videoElement.currentTime = this.startPts;
+        //this.startPts = 0;
+        //this.videoElement.autoplay = true;
+        //console.log("video: ", this.videoElement);
+      } else if (this.videoElement.readyState === 4) {
+        this.startPts = 0;
+      }
+    }
     updateSource(this.sourceBuffer, this.buffer);
+    //console.log("video ready: ", this.videoElement.readyState);
   };
 
   alignSourceBuffer = () => {
@@ -318,7 +349,13 @@ class StreamVideoNew extends React.Component {
     }
   };
 
+  // increaseCurrentTime = () => {
+  //   this.videoElement.currentTime += 1;
+  //   console.log("increase, ", this.videoElement.currentTime);
+  // };
+
   render() {
+    console.log("streamvideo: ", this.props.path);
     return <VideoPlayer onReady={this.onReady} />;
   }
 }
