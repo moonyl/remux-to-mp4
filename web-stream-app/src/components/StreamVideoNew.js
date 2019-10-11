@@ -1,7 +1,7 @@
 import React from "react";
 import MP4Box from "mp4box";
 import VideoPlayer from "@moonyl/react-video-js-player";
-import { Button } from "@material-ui/core";
+//import { Button } from "@material-ui/core";
 
 const createWebSocket = (protocol, hostname, port, path) => {
   var s = null;
@@ -133,9 +133,9 @@ const keepAlive = ws => {
 class StreamVideoNew extends React.Component {
   buffer = [];
 
-  componentDidMount() {
-    console.log("componentDidMount");
-  }
+  // componentDidMount() {
+  //   console.log("componentDidMount");
+  // }
 
   componentWillUnmount() {
     console.log("componentWillUnmount", this.props.path);
@@ -148,7 +148,7 @@ class StreamVideoNew extends React.Component {
   }
 
   onReady = player => {
-    console.log("check, onReady");
+    //console.log("check, onReady");
     const { path } = this.props;
     this.videoElement = document.querySelector(`#${player.id()} video`);
     this.configWebSocket(path);
@@ -279,11 +279,11 @@ class StreamVideoNew extends React.Component {
       this.mediaSource,
       this.appendSourceBuffer
     );
-    console.log(this.mimeType);
-    console.log("source buffer added");
-    console.log("timestampOffset = " + this.sourceBuffer.timestampOffset);
+    // console.log(this.mimeType);
+    // console.log("source buffer added");
+    // console.log("timestampOffset = " + this.sourceBuffer.timestampOffset);
     this.mediaSource.duration = 1 / 0;
-    console.log("mediaSource: ", this.mediaSource);
+    // console.log("mediaSource: ", this.mediaSource);
     this.mediaSource.removeEventListener("sourceopen", this.alignSourceBuffer);
   };
 
@@ -355,9 +355,25 @@ class StreamVideoNew extends React.Component {
   // };
 
   render() {
-    console.log("streamvideo: ", this.props.path);
-    return <VideoPlayer onReady={this.onReady} />;
+    // console.log("streamvideo: ", this.props.path);
+    const { volumeMute } = this.props;
+    return (
+      <>
+        <VideoPlayer onReady={this.onReady} />
+        <VolumeMute on={volumeMute} video={this.videoElement} />
+      </>
+    );
   }
 }
 
+const VolumeMute = ({ on, video }) => {
+  if (on) {
+    if (video) video.volume = 0;
+    console.log("volume mute");
+  } else {
+    if (video) video.volume = 0.5;
+    console.log("volume: 0.5");
+  }
+  return <></>;
+};
 export default StreamVideoNew;

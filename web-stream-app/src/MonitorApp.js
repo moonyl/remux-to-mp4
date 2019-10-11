@@ -4,9 +4,11 @@ import VideoContext from "./utils/VideoContext";
 import withStyles from "@material-ui/core/styles/withStyles";
 import VideoCard from "./components/VideoCard";
 
+import AudioSelect from "./components/AudioSelect";
+
 const styles = theme => ({
   app: {
-    position: "fixed",
+    position: "relative",
     top: theme.overrides.heightOffset,
     left: theme.overrides.drawerWidth,
     width: "75%"
@@ -21,7 +23,8 @@ class MonitorApp extends React.Component {
   state = {
     streamDisplayInfos: [],
     videoContexts: {},
-    streams: []
+    streams: [],
+    audioSelect: 0
   };
 
   componentDidMount() {
@@ -69,10 +72,22 @@ class MonitorApp extends React.Component {
     this.setState({ streamDisplayInfos: filtered });
   };
 
+  onAudioSelect = event => {
+    console.log("audio select: ", event.target.value);
+    const { value } = event.target;
+    this.setState({ audioSelect: value });
+  };
+
   render() {
     const { classes } = this.props;
     return (
       <div className={classes.app}>
+        <AudioSelect
+          select={this.state.audioSelect}
+          onSelect={this.onAudioSelect}
+          displayInfos={this.state.streamDisplayInfos}
+        />
+
         <div className={classes.videoArea}>
           {this.state.streamDisplayInfos.map(displayInfo => {
             console.log({ displayInfo });
@@ -82,6 +97,7 @@ class MonitorApp extends React.Component {
                 displayInfo={displayInfo}
                 onVideoClose={this.onVideoClose}
                 onVideoReady={this.onVideoReady}
+                volumeMute={displayInfo.id !== this.state.audioSelect}
               />
             );
           })}

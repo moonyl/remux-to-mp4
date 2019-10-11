@@ -16,7 +16,7 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-const VideoCard = ({ displayInfo, onVideoClose }) => {
+const VideoCard = ({ displayInfo, onVideoClose, volumeMute }) => {
   const classes = useStyles();
   console.log("videoCard:", { displayInfo });
   return (
@@ -34,7 +34,7 @@ const VideoCard = ({ displayInfo, onVideoClose }) => {
         </div>
       </CardContent>
       {/* <VideoPlayer key={displayInfo.id} onReady={onVideoReady(displayInfo.id)} /> */}
-      <StreamVideoNew path={`livews/${displayInfo.id}`} />
+      <StreamVideoNew path={`livews/${displayInfo.id}`} volumeMute={volumeMute} />
     </Card>
   );
 };
