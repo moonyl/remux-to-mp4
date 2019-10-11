@@ -49,7 +49,7 @@ public:
 				if (reply["state"].toString() == "OK") {
 					auto result = reply["result"];
 					if (result.isObject()) {
-						url = result.toObject()["url"].toString();
+						url = result.toObject()["url"].toString().trimmed();
 						//std::cout << "url: " << qPrintable(url) << std::endl;
 						user = result.toObject()["user"].isString() ? result.toObject()["user"].toString() : "";
 						password = result.toObject()["password"].isString() ? result.toObject()["password"].toString() : "";
@@ -61,7 +61,8 @@ public:
 			}
 
 			// auto builder = _requested.dequeue();
-			if (!user.isEmpty()) {
+			std::cout << "url isEmpty(): " << url.isEmpty() << std::endl;
+			if (!url.isEmpty() && !user.isEmpty()) {
 			 	url.setUserName(user);
 			 	url.setPassword(password);
 			}

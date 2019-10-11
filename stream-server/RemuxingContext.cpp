@@ -38,7 +38,10 @@ void RemuxingContext::setUrl(const char* inFileName)
 }
 
 void RemuxingContext::asyncRemux()
-{	
+{
+	if (_inFileName.empty()) {
+		return;
+	}
 	if (_futureWatcher.isFinished() && _tryRemuxing == false) {		
 		auto future = QtConcurrent::run(doRemux, this);
 		_futureWatcher.setFuture(future);

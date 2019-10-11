@@ -26,7 +26,11 @@ public:
 	{
 		QObject::connect(&_setupCommunicator, &StreamSetupCommunicator::created,
 			[this](const QString& cameraId, const QUrl& url) {
-				value(cameraId)->setUrl(qPrintable(url.toString(QUrl::None)));
+			std::cout << "url: " << qPrintable(url.toString(QUrl::None)) << ", valid: " << url.isValid() << std::endl;
+				if (!url.isEmpty() && url.isValid()) {
+					value(cameraId)->setUrl(qPrintable(url.toString(QUrl::None)));
+					value(cameraId)->asyncRemux();
+				}				
 			});
 	}
 	
@@ -37,31 +41,17 @@ public:
 			const auto &remuxer = QSharedPointer<RemuxingContext>{ new RemuxingContext };
 			QObject::connect(remuxer.get(), &RemuxingContext::singleStepFinished, [this]()
 				{
-					asynRemux();
-					//monitorStream();
+					asynRemux();					
 					cleanupEnded();
 				});
 			
 			insert(cameraId, remuxer);			
 		}
 		value(cameraId)->addSocket(socket);
-		// QObject::connect(socket, &QWebSocket::disconnected, [this]()
-		// 	{
-		// 		_disconnectRequested = true;
-		// 	});
 	}
 
 	void asynRemux()
 	{
-		// if (_disconnectRequested) {
-		// 	for (const auto& key : keys()) {
-		// 		if (!value(key)->hasConnection()) {
-		// 			std::cout << "try remove in asyncRemux" << std::endl;
-		// 			remove(key);
-		// 		}
-		// 	}
-		// 	_disconnectRequested = false;
-		// }
 		for (const auto& remuxer: remuxers()) {
 			remuxer->asyncRemux();			
 		}		
