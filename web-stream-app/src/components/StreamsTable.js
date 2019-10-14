@@ -14,9 +14,7 @@ import EditIcon from "@material-ui/icons/Edit";
 const headRows = [
   { id: "title", numeric: false, disablePadding: false, label: "이름" },
   { id: "type", numeric: false, disablePadding: false, label: "타입" },
-  { id: "url", numeric: false, disablePadding: false, label: "URL" },
-  { id: "ip", numeric: false, disablePadding: false, label: "IP" },
-  { id: "profile", numeric: false, disablePadding: false, label: "프로파일" },
+  { id: "summary", numeric: false, disablePadding: false, label: "스트림 요약" },
   { id: "edit", numeric: false, disablePadding: false, label: "편집" }
 ];
 
@@ -40,6 +38,7 @@ const StreamTableHead = props => (
 );
 
 const StreamsTable = ({ streams, onSelectChange, onEdit }) => {
+  console.log({ streams });
   return (
     <Table>
       <StreamTableHead />
@@ -53,9 +52,14 @@ const StreamsTable = ({ streams, onSelectChange, onEdit }) => {
               </TableCell>
               <TableCell align="left">{stream.title}</TableCell>
               <TableCell align="left">{stream.type}</TableCell>
-              <TableCell align="left">{stream.url}</TableCell>
-              <TableCell align="left">{"IP"}</TableCell>
-              <TableCell align="left">{"profile content"}</TableCell>
+              {stream.type === "rtsp" ? (
+                <TableCell align="left">{stream.url}</TableCell>
+              ) : stream.profileSummary ? (
+                <TableCell align="left">{stream.profileSummary}</TableCell>
+              ) : (
+                <TableCell align="left">프로파일이 설정되지 않았습니다.</TableCell>
+              )}
+
               <TableCell align="left">
                 <Fab size="small" color="primary" onClick={onEdit(stream.id)}>
                   <EditIcon />
