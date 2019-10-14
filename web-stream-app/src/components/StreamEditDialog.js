@@ -25,6 +25,7 @@ const StreamEditDialog = ({
   profiles,
   profileSel,
   profileLoading,
+  profileSummary,
   url,
   user,
   password,
@@ -33,10 +34,20 @@ const StreamEditDialog = ({
   open,
   onCancel,
   onSave,
-  onAuth
+  onAuth,
+  streamId
 }) => {
   const classes = useStyles();
-  const onvifOnlyFormInfo = { service, profiles, profileSel, profileLoading, error, onValueChange };
+  const onvifOnlyFormInfo = {
+    service,
+    profiles,
+    profileSel,
+    profileSummary,
+    profileLoading,
+    error,
+    onValueChange
+  };
+  console.log({ streamId });
   return (
     <Dialog open={open} onClose={onCancel} aria-labelledby="draggable-dialog-title">
       <DialogTitle id="draggable-dialog-title">스트림 설정</DialogTitle>
@@ -86,7 +97,7 @@ const StreamEditDialog = ({
         <Button onClick={onCancel} color="primary">
           취소
         </Button>
-        <Button onClick={onAuth} color="primary">
+        <Button onClick={onAuth(streamId)} color="primary">
           인증
         </Button>
         <Button onClick={onSave} color="primary">

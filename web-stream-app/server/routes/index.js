@@ -30,22 +30,51 @@ router.get("/stream/:id", (req, res) => {
 
 router.post("/stream/:id", (req, res) => {
   const { id } = req.params;
-  const { cmd } = req.body;
+  const { cmd, param } = req.body;
   //console.log({ id, cmd });
-  if (cmd === "delete") {
-    Stream.findOne({ _id: id }, (error, doc) => {
-      if (error) {
-        console.error(error);
-        res.send({ state: "NG", error });
-      }
-      if (doc) {
+
+  Stream.findOne({ _id: id }, (error, doc) => {
+    if (error) {
+      console.error(error);
+      res.send({ state: "NG", error });
+    }
+    if (doc) {
+      if (cmd === "delete") {
         doc.remove(() => {
           console.log("removed");
           res.send({ state: "OK" });
         });
+      } else if (cmd === "update") {
+        console.log("should update record, result: ");
+        console.log({ param });
+        console.log({ doc });
+        const { title, type, url, user, password, service, profileSummary, profileSel } = param;
+        doc.title = title;
+        doc.type = type;
+        doc.url = url;
+        doc.user = user;
+        doc.password = password;
+        doc.service = service;
+        doc.profileSummary = profileSummary;
+        doc.profileSel = profileSel;
+        doc.save(err => {
+          if (err) {
+            console.error(err);
+            return;
+          }
+          console.log("saved: ", doc._id);
+        });
+        // Stream.update({ _id }, { $set: streamInfo }, {}, (error, numReplaced) => {
+        //   if (error) {
+        //     res.send({ state: "NG", error });
+        //     return;
+        //   }
+        //   console.log("updated");
+        //   res.send({ state: "OK" });
+        // });
       }
-    });
-  }
+    }
+  });
 });
 
 router.get("/stream", (req, res) => {
@@ -56,11 +85,11 @@ router.get("/stream", (req, res) => {
       return;
     }
     const streams = result.map(item => {
-      const { _id, title, type, url, user, password, service, profiles, profileSel } = item;
+      const { _id, title, type, url, user, password, service, profileSummary, profileSel } = item;
       console.log(_id, title);
       return {
         streamId: _id,
-        streamInfo: { title, type, url, user, password, service, profiles, profileSel }
+        streamInfo: { title, type, url, user, password, service, profileSummary, profileSel }
       };
     });
     res.send({ state: "OK", result: streams });
@@ -93,14 +122,15 @@ router.post("/stream", (req, res) => {
       console.log("should add new record");
       let streamData = new Stream();
       streamData._id = _id;
-      const { title, type, url, user, password, service, profiles, profileSel } = streamInfo;
+      const { title, type, url, user, password, service, profileSummary, profileSel } = streamInfo;
       streamData.title = title;
       streamData.type = type;
       streamData.url = url;
       streamData.user = user;
       streamData.service = service;
       streamData.password = password;
-      streamData.profiles = profiles;
+      //streamData.profiles = profiles;
+      streamData.profileSummary = profileSummary;
       streamData.profileSel = profileSel;
       streamData.save(error => {
         if (error) {
@@ -122,6 +152,7 @@ router.post("/stream", (req, res) => {
     });
   });
 });
+
 router.post("/setupStream", (req, res) => {
   console.log("body: ", req.body);
   const { streamId, streamInfo } = req.body;

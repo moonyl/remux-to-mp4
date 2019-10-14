@@ -32,12 +32,20 @@ private:
 			QLocalSocket* client = _server.nextPendingConnection();
 			auto handler = new OnvifDiscoveryClientHandler(client, _scanner);
 			std::cout << "before: " << handler << std::endl;
-			QObject::connect(handler, &OnvifDiscoveryClientHandler::handleDone, [handler, this]()
+
+			handler->setHandleDone([handler, this]()
 			{
 				std::cout << "after: " << handler << std::endl;				
 				_handlers.remove(handler);
-				handler->deleteLater();
+				//handler->deleteLater();
+				delete handler;
 			});
+			// QObject::connect(handler, &OnvifDiscoveryClientHandler::handleDone, [handler, this]()
+			// {
+			// 	std::cout << "after: " << handler << std::endl;				
+			// 	_handlers.remove(handler);
+			// 	handler->deleteLater();
+			// });
 			_handlers << handler;
 		});
 	}

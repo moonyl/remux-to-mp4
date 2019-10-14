@@ -12,7 +12,8 @@ const Stream = new LinvoDB("Stream", {
   password: String,
   url: String,
   service: String,
-  profiles: [{ codec: String, name: String, width: Number, height: Number, url: String }],
+  //profiles: [{ codec: String, name: String, width: Number, height: Number, url: String }],
+  profileSummary: String,
   profileSel: Number
 });
 

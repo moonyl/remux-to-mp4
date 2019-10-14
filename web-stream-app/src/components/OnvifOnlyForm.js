@@ -1,11 +1,26 @@
 import React from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import { FormControl, TextField, InputLabel, Select, CircularProgress } from "@material-ui/core";
+import {
+  FormControl,
+  TextField,
+  InputLabel,
+  NativeSelect,
+  CircularProgress
+} from "@material-ui/core";
 
 const useStyles = makeStyles(theme => ({}));
 
-const OnvifOnlyForm = ({ service, profiles, profileSel, profileLoading, error, onValueChange }) => {
+const OnvifOnlyForm = ({
+  service,
+  profiles,
+  profileSel,
+  profileSummary,
+  profileLoading,
+  error,
+  onValueChange
+}) => {
   const classes = useStyles();
+  console.log({ profileSel });
   return (
     <>
       <TextField
@@ -21,8 +36,7 @@ const OnvifOnlyForm = ({ service, profiles, profileSel, profileLoading, error, o
       ) : (
         <FormControl className={classes.formControl} fullWidth error={error ? true : false}>
           <InputLabel htmlFor="profile-native-simple">Profiles</InputLabel>
-          <Select
-            native
+          <NativeSelect
             value={profileSel}
             onChange={onValueChange("profileSel")}
             inputProps={{
@@ -30,17 +44,21 @@ const OnvifOnlyForm = ({ service, profiles, profileSel, profileLoading, error, o
               id: "profile-native-simple"
             }}
           >
-            <option value="" disabled={error ? false : true}>
+            <option key={-1} value={-1} disabled>
               {error ? error : "Profiles"}
             </option>
-            {profiles &&
+            {profiles && profiles.length > 0 ? (
               profiles.map((item, index) => (
-                <option
-                  key={index}
-                  value={index}
-                >{`${item.name} (${item.codec}, ${item.width} x ${item.height})`}</option>
-              ))}
-          </Select>
+                <option key={index} value={index}>
+                  {`${item.name} (${item.codec}, ${item.width} x ${item.height})`}
+                </option>
+              ))
+            ) : profileSummary !== "" ? (
+              <option value={profileSel}>{profileSummary}</option>
+            ) : (
+              <></>
+            )}
+          </NativeSelect>
         </FormControl>
       )}
     </>

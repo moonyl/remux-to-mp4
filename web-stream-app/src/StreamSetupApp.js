@@ -20,11 +20,13 @@ class StreamSetupApp extends React.Component {
       type: "rtsp",
       service: "",
       profiles: [],
-      profileSel: 0,
+      profileSel: -1,
       url: "",
       user: "",
-      password: ""
+      password: "",
+      profileSummmary: ""
     },
+    profileLoading: false,
     streams: [],
     openDiscovery: false,
     discovered: [],
@@ -38,22 +40,47 @@ class StreamSetupApp extends React.Component {
   onSave = () => {
     this.setState({ openEdit: false });
     console.log("location: ", window.location.origin);
-    const route = "/api/stream";
+
     const { streamId, streamInfo } = this.state;
-    const setting = { streamId, streamInfo };
-    fetch(route, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(setting)
-    })
-      .then(result => {
-        console.log(result);
+    if (!streamId) {
+      const route = "/api/stream";
+      const setting = { streamId, streamInfo };
+      fetch(route, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(setting)
       })
-      .catch(error => {
-        console.error(error);
-      });
+        .then(result => {
+          console.log(result);
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    } else {
+      const route = `/api/stream/${streamId}`;
+      const selectedProfile = streamInfo.profiles[streamInfo.profileSel];
+      const { name, codec, width, height, url } = selectedProfile;
+      const profileSummary = `${name} (${codec}, ${width} x ${height})`;
+      const param = { ...streamInfo, url, profileSummary };
+      delete param.profiles;
+
+      const setting = { cmd: "update", param };
+      fetch(route, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(setting)
+      })
+        .then(result => {
+          console.log(result);
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    }
   };
 
   componentDidMount() {
@@ -70,6 +97,7 @@ class StreamSetupApp extends React.Component {
       .then(result => {
         const { state, result: streams } = result;
         if (state === "OK") {
+          console.log({ streams });
           const tableData = streams.map(stream => {
             const { streamId, streamInfo } = stream;
             return { id: streamId, ...streamInfo };
@@ -82,28 +110,42 @@ class StreamSetupApp extends React.Component {
       });
   };
 
-  onAuth = () => {
-    console.log("should implement auth");
+  //onAuth = streamId => event => {
+  onAuth = streamId => event => {
+    const { user, password } = this.state.streamInfo;
+    console.log({ streamId, user, password });
+    this.setState({ profileLoading: true });
+    const route = "/onvif/auth";
+    fetch(route, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ id: streamId, user, password })
+    })
+      .then(reply => {
+        return reply.json();
+      })
+      .then(json => {
+        const { state, media, ptz } = json;
+        if (state === true) {
+          const { streamInfo } = this.state;
+          const currentStream = { ...streamInfo };
+          console.log({ currentStream });
+          currentStream.profiles = media;
+          currentStream.profileSel = 0;
+          this.setState({ streamInfo: currentStream });
+        }
+        this.setState({ profileLoading: false });
+      })
+      .catch(error => {
+        console.error(error);
+      });
   };
 
   addStream = () => {
     //console.log("handleClickOpen");
     this.setState({ openEdit: true, streamId: "", streamInfo: { type: "rtsp" } });
-  };
-
-  editStream = () => {
-    // steramInfo를 읽어들인다.
-    let streamId = "abcdefg";
-    let streamInfo = {
-      type: "onvif",
-      service: "",
-      profiles: [],
-      profileSel: 0,
-      url: "",
-      user: "",
-      password: ""
-    };
-    this.setState({ openEdit: true, streamId, streamInfo });
   };
 
   onStreamEdit = id => event => {
@@ -212,26 +254,23 @@ class StreamSetupApp extends React.Component {
   };
 
   render() {
-    const { streamInfo } = this.state;
+    const { streamInfo, streamId } = this.state;
     const { classes } = this.props;
     console.log("state: ", this.state);
 
     return (
       <div className={classes.app}>
         <Button variant="outlined" color="primary" onClick={this.addStream}>
-          추가
+          스트림 추가
         </Button>
         <Button variant="outlined" color="primary" onClick={this.discovery}>
           스트림 검색
         </Button>
         <Button variant="outlined" color="primary" onClick={this.deleteStream}>
-          삭제
+          스트림 삭제
         </Button>
         <Button variant="outlined" color="primary" onClick={this.findAllStream}>
           스트림 업데이트
-        </Button>
-        <Button variant="outlined" color="primary" onClick={this.editStream}>
-          수정
         </Button>
         <StreamsTable
           streams={this.state.tableData}
@@ -240,7 +279,8 @@ class StreamSetupApp extends React.Component {
         />
         <StreamEditDialog
           {...streamInfo}
-          profileLoading={false}
+          streamId={streamId}
+          profileLoading={this.state.profileLoading}
           open={this.state.openEdit}
           onCancel={this.onCancel}
           onSave={this.onSave}
