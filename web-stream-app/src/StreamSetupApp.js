@@ -17,6 +17,7 @@ class StreamSetupApp extends React.Component {
     openEdit: false,
     streamId: "",
     streamInfo: {
+      title: "",
       type: "rtsp",
       service: "",
       profiles: [],
@@ -39,7 +40,7 @@ class StreamSetupApp extends React.Component {
 
   onSave = () => {
     this.setState({ openEdit: false });
-    console.log("location: ", window.location.origin);
+    //console.log("location: ", window.location.origin);
 
     const { streamId, streamInfo } = this.state;
     if (!streamId) {
@@ -60,11 +61,16 @@ class StreamSetupApp extends React.Component {
         });
     } else {
       const route = `/api/stream/${streamId}`;
-      const selectedProfile = streamInfo.profiles[streamInfo.profileSel];
-      const { name, codec, width, height, url } = selectedProfile;
-      const profileSummary = `${name} (${codec}, ${width} x ${height})`;
-      const param = { ...streamInfo, url, profileSummary };
-      delete param.profiles;
+      let param;
+      if (streamInfo.profiles) {
+        const selectedProfile = streamInfo.profiles[streamInfo.profileSel];
+        const { name, codec, width, height, url } = selectedProfile;
+        const profileSummary = `${name} (${codec}, ${width} x ${height})`;
+        param = { ...streamInfo, url, profileSummary };
+        delete param.profiles;
+      } else {
+        param = { ...streamInfo };
+      }
 
       const setting = { cmd: "update", param };
       fetch(route, {
@@ -97,7 +103,7 @@ class StreamSetupApp extends React.Component {
       .then(result => {
         const { state, result: streams } = result;
         if (state === "OK") {
-          console.log({ streams });
+          //console.log({ streams });
           const tableData = streams.map(stream => {
             const { streamId, streamInfo } = stream;
             return { id: streamId, ...streamInfo };
@@ -113,7 +119,7 @@ class StreamSetupApp extends React.Component {
   //onAuth = streamId => event => {
   onAuth = streamId => event => {
     const { user, password } = this.state.streamInfo;
-    console.log({ streamId, user, password });
+    //console.log({ streamId, user, password });
     this.setState({ profileLoading: true });
     const route = "/onvif/auth";
     fetch(route, {
@@ -127,16 +133,20 @@ class StreamSetupApp extends React.Component {
         return reply.json();
       })
       .then(json => {
+        console.log({ json });
         const { state, media, ptz } = json;
+        const { streamInfo } = this.state;
+        const currentStream = { ...streamInfo };
         if (state === true) {
-          const { streamInfo } = this.state;
-          const currentStream = { ...streamInfo };
-          console.log({ currentStream });
+          //console.log({ currentStream });
           currentStream.profiles = media;
           currentStream.profileSel = 0;
-          this.setState({ streamInfo: currentStream });
+          //this.setState({ streamInfo: currentStream });
+        } else {
+          const { error } = json;
+          currentStream.error = error;
         }
-        this.setState({ profileLoading: false });
+        this.setState({ streamInfo: currentStream, profileLoading: false });
       })
       .catch(error => {
         console.error(error);
@@ -149,11 +159,24 @@ class StreamSetupApp extends React.Component {
   };
 
   onStreamEdit = id => event => {
-    console.log({ id });
-    console.log("streams:", this.state.streams);
+    //console.log({ id });
+    //console.log("streams:", this.state.streams);
     const selected = this.state.streams.find(elem => elem.streamId === id);
-    const { streamInfo } = selected;
+    const defaultInfo = {
+      title: "",
+      type: "rtsp",
+      service: "",
+      profiles: [],
+      profileSel: -1,
+      url: "",
+      user: "",
+      password: "",
+      profileSummmary: ""
+    };
+    const { streamInfo: update } = selected;
 
+    const streamInfo = { ...defaultInfo, ...update };
+    console.log({ streamInfo });
     this.setState({ openEdit: true, streamId: id, streamInfo });
   };
 
@@ -174,7 +197,7 @@ class StreamSetupApp extends React.Component {
   };
 
   onDiscoveryAdd = selected => event => {
-    console.log("selected: ", selected);
+    //console.log("selected: ", selected);
     this.setState({ openDiscovery: false });
     // TODO : 스트림을 SETUP에 추가한다.
     const route = "/api/stream";
@@ -201,7 +224,7 @@ class StreamSetupApp extends React.Component {
   };
 
   onDiscoveryCancel = () => {
-    console.log("onDiscoveryCancel");
+    //console.log("onDiscoveryCancel");
     this.setState({ openDiscovery: false });
   };
 
@@ -214,7 +237,7 @@ class StreamSetupApp extends React.Component {
   };
 
   deleteStream = event => {
-    console.log("selected: ", this.state.selected);
+    //console.log("selected: ", this.state.selected);
 
     this.state.selected.forEach(item => {
       const setting = { cmd: "delete" };
@@ -249,14 +272,14 @@ class StreamSetupApp extends React.Component {
       });
       this.setState({ selected: filtered });
     }
-    console.log({ id });
-    console.log(event.target.checked);
+    //console.log({ id });
+    //console.log(event.target.checked);
   };
 
   render() {
     const { streamInfo, streamId } = this.state;
     const { classes } = this.props;
-    console.log("state: ", this.state);
+    //console.log("state: ", this.state);
 
     return (
       <div className={classes.app}>

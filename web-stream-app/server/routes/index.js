@@ -45,18 +45,13 @@ router.post("/stream/:id", (req, res) => {
           res.send({ state: "OK" });
         });
       } else if (cmd === "update") {
-        console.log("should update record, result: ");
-        console.log({ param });
-        console.log({ doc });
-        const { title, type, url, user, password, service, profileSummary, profileSel } = param;
-        doc.title = title;
-        doc.type = type;
-        doc.url = url;
-        doc.user = user;
-        doc.password = password;
-        doc.service = service;
-        doc.profileSummary = profileSummary;
-        doc.profileSel = profileSel;
+        //console.log("should update record, result: ");
+        //console.log({ param });
+        //console.log({ doc });
+        for (const key in param) {
+          console.log({ key });
+          doc[key] = param[key];
+        }
         doc.save(err => {
           if (err) {
             console.error(err);
@@ -64,14 +59,6 @@ router.post("/stream/:id", (req, res) => {
           }
           console.log("saved: ", doc._id);
         });
-        // Stream.update({ _id }, { $set: streamInfo }, {}, (error, numReplaced) => {
-        //   if (error) {
-        //     res.send({ state: "NG", error });
-        //     return;
-        //   }
-        //   console.log("updated");
-        //   res.send({ state: "OK" });
-        // });
       }
     }
   });
@@ -86,7 +73,7 @@ router.get("/stream", (req, res) => {
     }
     const streams = result.map(item => {
       const { _id, title, type, url, user, password, service, profileSummary, profileSel } = item;
-      console.log(_id, title);
+      //console.log(_id, title);
       return {
         streamId: _id,
         streamInfo: { title, type, url, user, password, service, profileSummary, profileSel }
@@ -122,16 +109,11 @@ router.post("/stream", (req, res) => {
       console.log("should add new record");
       let streamData = new Stream();
       streamData._id = _id;
-      const { title, type, url, user, password, service, profileSummary, profileSel } = streamInfo;
-      streamData.title = title;
-      streamData.type = type;
-      streamData.url = url;
-      streamData.user = user;
-      streamData.service = service;
-      streamData.password = password;
-      //streamData.profiles = profiles;
-      streamData.profileSummary = profileSummary;
-      streamData.profileSel = profileSel;
+      for (const key in streamInfo) {
+        console.log({ key });
+        streamData[key] = streamInfo[key];
+      }
+
       streamData.save(error => {
         if (error) {
           res.send({ state: "NG", error });

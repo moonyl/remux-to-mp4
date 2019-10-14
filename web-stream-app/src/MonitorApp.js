@@ -28,7 +28,7 @@ class MonitorApp extends React.Component {
   };
 
   componentDidMount() {
-    console.log("monitor app");
+    //console.log("monitor app");
     fetch("/api/stream")
       .then(res => {
         if (!res.ok) {
@@ -73,7 +73,7 @@ class MonitorApp extends React.Component {
   };
 
   onAudioSelect = event => {
-    console.log("audio select: ", event.target.value);
+    //console.log("audio select: ", event.target.value);
     const { value } = event.target;
     this.setState({ audioSelect: value });
   };
@@ -90,7 +90,7 @@ class MonitorApp extends React.Component {
 
         <div className={classes.videoArea}>
           {this.state.streamDisplayInfos.map(displayInfo => {
-            console.log({ displayInfo });
+            //console.log({ displayInfo });
             return (
               <VideoCard
                 key={displayInfo.id}

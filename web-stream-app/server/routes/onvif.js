@@ -52,7 +52,9 @@ router.post("/auth", (req, res) => {
         console.log("OK");
         res.send(data);
       } else {
-        console.log("NG");
+        //console.log({ reply });
+        //console.log("NG");
+        res.send(data);
       }
       client.end();
     });

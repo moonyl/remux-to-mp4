@@ -281,7 +281,8 @@ public:
 				_sendOnvifRequestResult = [this, reply, user, password]()
 				{
 					if (reply.error() != SoapError::Ok) {
-						_sender.sendResult(QJsonDocument{{"error", reply.error()}}.toJson());
+						_sender.sendResult(QJsonDocument{QJsonObject{{"state", false}, {"error", reply.errorText()}}}.toJson());
+						return;
 					}
 
 					auto url = reply.value(OnvifKey::Device::Url).toUrl();
@@ -293,7 +294,8 @@ public:
 							_sender.sendResult(result);
 						});						
 					};
-					
+
+					std::cout << "check: informer reset" << std::endl;
 					_informer.reset(new OnvifServiceInformer(url, user, password, 
 						_sendOnvifSessionResult, _sendOnvifSessionResult));
 				};

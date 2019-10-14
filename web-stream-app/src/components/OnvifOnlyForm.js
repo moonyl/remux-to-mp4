@@ -20,7 +20,7 @@ const OnvifOnlyForm = ({
   onValueChange
 }) => {
   const classes = useStyles();
-  console.log({ profileSel });
+  //console.log({ profileSel });
   return (
     <>
       <TextField

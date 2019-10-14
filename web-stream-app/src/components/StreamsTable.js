@@ -38,7 +38,7 @@ const StreamTableHead = props => (
 );
 
 const StreamsTable = ({ streams, onSelectChange, onEdit }) => {
-  console.log({ streams });
+  //console.log({ streams });
   return (
     <Table>
       <StreamTableHead />

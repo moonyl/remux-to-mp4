@@ -47,7 +47,7 @@ const StreamEditDialog = ({
     error,
     onValueChange
   };
-  console.log({ streamId });
+  //console.log({ streamId });
   return (
     <Dialog open={open} onClose={onCancel} aria-labelledby="draggable-dialog-title">
       <DialogTitle id="draggable-dialog-title">스트림 설정</DialogTitle>
