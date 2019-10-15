@@ -77,8 +77,12 @@ public:
 		_setupClient.connectToServer("WebStreamApp");
 	}
 
-	void makeRemuxContext(const QString& cameraId)
+	bool makeRemuxContext(const QString& cameraId)
 	{
+		std::cout << "localsocket valid: " << _setupClient.isValid() << std::endl;
+		if (!_setupClient.isValid()) {
+			return false;
+		}
 		QUuid sid = QUuid::createUuid();
 		_camIdMap[sid] = cameraId;
 		auto request = QJsonDocument(QJsonObject{
@@ -88,5 +92,6 @@ public:
 		}).toJson();
 		_setupClient.write(request);
 		//_requested.enqueue(QSharedPointer<RemuxingContextBuilder>(new RemuxingContextBuilder{cameraId}));
+		return true;
 	}
 };

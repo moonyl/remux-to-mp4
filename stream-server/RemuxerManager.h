@@ -2,27 +2,23 @@
 
 #include <QMap>
 #include <QSharedPointer>
-//#include "RemuxScheduler.h"
 #include <QUuid>
 #include "RemuxingContext.h"
-#include "RemuxScheduler.h"
+//#include "RemuxScheduler.h"
 #include "StreamSetupCommunicator.h"
 #include <QUrl>
-#include <algorithm>
-#include <functional>
-#include <QtConcurrent>
-//class StreamSetupCommunicator;
+
 class QWebSocket;
 
 class RemuxerManager : public QMap<QUuid, QSharedPointer<RemuxingContext>>
 {
 	StreamSetupCommunicator& _setupCommunicator;
-	RemuxScheduler _scheduler;
+	//RemuxScheduler _scheduler;
 	QMap<QUuid, QWebSocket> _sockets;
 	bool _disconnectRequested = false;
 
 public:
-	RemuxerManager(StreamSetupCommunicator& setupCommunicator) : _setupCommunicator(setupCommunicator), _scheduler(*this)
+	RemuxerManager(StreamSetupCommunicator& setupCommunicator) : _setupCommunicator(setupCommunicator)//, _scheduler(*this)
 	{
 		QObject::connect(&_setupCommunicator, &StreamSetupCommunicator::created,
 			[this](const QString& cameraId, const QUrl& url) {
@@ -37,20 +33,23 @@ public:
 	void update(const QString& cameraId, QWebSocket* socket)
 	{
 		if (!contains(cameraId)) {
-			_setupCommunicator.makeRemuxContext(cameraId);
+			bool valid = _setupCommunicator.makeRemuxContext(cameraId);
+			if (!valid)	{
+				return;
+			}
 			const auto &remuxer = QSharedPointer<RemuxingContext>{ new RemuxingContext };
 			QObject::connect(remuxer.get(), &RemuxingContext::singleStepFinished, [this]()
 				{
-					asynRemux();					
+					asyncRemux();					
 					cleanupEnded();
 				});
 			
-			insert(cameraId, remuxer);			
+			insert(cameraId, remuxer);						
 		}
 		value(cameraId)->addSocket(socket);
 	}
 
-	void asynRemux()
+	void asyncRemux()
 	{
 		for (const auto& remuxer: remuxers()) {
 			remuxer->asyncRemux();			
@@ -59,7 +58,8 @@ public:
 
 	void startRemux()
 	{
-		_scheduler.start();
+		//_scheduler.start();
+		asyncRemux();
 	}
 	
 	QList<QSharedPointer<RemuxingContext>> remuxers() const {

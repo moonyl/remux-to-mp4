@@ -399,7 +399,7 @@ FrameRemuxer::RemuxedFrame FrameRemuxer::remux()
 	if (in_stream->codecpar->codec_type != AVMEDIA_TYPE_AUDIO &&
 		in_stream->codecpar->codec_type != AVMEDIA_TYPE_VIDEO &&
 		in_stream->codecpar->codec_type != AVMEDIA_TYPE_SUBTITLE) {
-		std::cout << "cannot mux, maybe camera event?" << std::endl;
+		//std::cout << "cannot mux, maybe camera event?" << std::endl;
 		//av_packet_unref(&_pkt);
 		return { QByteArray(), -1 };
 	}

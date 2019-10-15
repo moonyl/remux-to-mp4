@@ -14,7 +14,7 @@ void RemuxScheduler::start()
 }
 void RemuxScheduler::doRemuxing()
 {
-	_manager.asynRemux();
+	_manager.asyncRemux();
 
 	//_manager.monitorStream();
 
