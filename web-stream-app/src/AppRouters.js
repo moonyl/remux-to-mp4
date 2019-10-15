@@ -3,6 +3,8 @@ import StreamSetupApp from "./StreamSetupApp";
 import MonitorApp from "./MonitorApp";
 import LoginApp from "./LoginApp";
 import SignupApp from "./SignupApp";
+import HidStreamApp from "./HidStreamApp";
+import PopupApp from "./PopupApp";
 import { Link, BrowserRouter as Router, Route } from "react-router-dom";
 import { makeStyles } from "@material-ui/core/styles";
 import { AppBar, Toolbar, Typography, Tabs, Tab } from "@material-ui/core";
@@ -19,6 +21,7 @@ const useStyles = makeStyles(theme => ({
 const TopMenus = [
   { path: "/", label: "감시", component: MonitorApp },
   { path: "/config", label: "설정", component: StreamSetupApp },
+  { path: "/popup", label: "팝업", component: HidStreamApp },
   { path: "/login", label: "로그인", component: LoginApp },
   { path: "/signup", label: "가입", component: SignupApp }
 ];
@@ -52,6 +55,7 @@ const AppRouters = props => {
       {TopMenus.map(data => (
         <Route key={data.path} exact path={data.path} component={data.component} />
       ))}
+      <Route path="/view/:hid" component={PopupApp} />
     </Router>
   );
 };

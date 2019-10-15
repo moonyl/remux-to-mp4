@@ -3,9 +3,30 @@ const router = express.Router();
 const Stream = require("../setup/stream.js");
 const uuid = require("uuid/v4");
 const uuidv5 = require("uuid/v5");
+import { sprintf } from "sprintf-js";
 
 router.get("/", (req, res) => {
   res.json({ data: "this is index." });
+});
+
+router.get("/stream-id/:hid", (req, res) => {
+  const { hid } = req.params;
+  console.log({ hid });
+  Stream.findOne({ hid: hid }, (error, result) => {
+    if (error) {
+      console.error(error);
+      res.send({ state: "NG", error });
+      return;
+    }
+    //console.log({ result });
+    const { _id, title, type, url, user, password, service, profiles, profileSel } = result;
+    res.send({
+      state: "OK",
+      result: {
+        id: _id
+      }
+    });
+  });
 });
 
 router.get("/stream/:id", (req, res) => {
@@ -16,7 +37,7 @@ router.get("/stream/:id", (req, res) => {
       res.send({ state: "NG", error });
       return;
     }
-    console.log({ result });
+    //console.log({ result });
     const { _id, title, type, url, user, password, service, profiles, profileSel } = result;
     res.send({
       state: "OK",
@@ -72,11 +93,22 @@ router.get("/stream", (req, res) => {
       return;
     }
     const streams = result.map(item => {
-      const { _id, title, type, url, user, password, service, profileSummary, profileSel } = item;
+      const {
+        _id,
+        title,
+        type,
+        url,
+        user,
+        password,
+        service,
+        profileSummary,
+        profileSel,
+        hid
+      } = item;
       //console.log(_id, title);
       return {
         streamId: _id,
-        streamInfo: { title, type, url, user, password, service, profileSummary, profileSel }
+        streamInfo: { title, type, url, user, password, service, profileSummary, profileSel, hid }
       };
     });
     res.send({ state: "OK", result: streams });
@@ -84,10 +116,36 @@ router.get("/stream", (req, res) => {
   });
 });
 
+const getHid = handleHid => {
+  let streamHid;
+  return Stream.find({})
+    .sort({ hid: -1 })
+    .exec((err, res) => {
+      if (err) {
+        console.log({ err });
+        handleHid(err);
+        return;
+      }
+      const { hid } = res[0];
+      console.log("hid:", { hid });
+      if (hid) {
+        const re = /stream(\d\d\d\d)/;
+        const regRes = hid.match(re);
+        console.log({ regRes });
+        streamHid = "stream" + sprintf("%04d", parseInt(regRes[1]) + 1);
+      } else {
+        streamHid = "stream0001";
+        console.log({ streamHid });
+      }
+      handleHid(0, streamHid);
+    });
+};
+
 router.post("/stream", (req, res) => {
   console.log("body: ", req.body);
   const { streamId, streamInfo } = req.body;
   let _id = streamId;
+  //let streamHid = null;
   if (!streamId) {
     console.log("new case");
     const { type, service } = streamInfo;
@@ -96,43 +154,57 @@ router.post("/stream", (req, res) => {
     } else {
       _id = uuid();
     }
-    //_id = "e3f3408d-6f8b-430c-926b-3e7e8a5f2aec";
-  }
-  Stream.find({ _id }, (error, result) => {
-    if (error) {
-      console.error(error);
-      res.send({ state: "NG", error });
-      return;
-    }
-    console.log({ result, _id });
-    if (result.length === 0) {
-      console.log("should add new record");
-      let streamData = new Stream();
-      streamData._id = _id;
-      for (const key in streamInfo) {
-        console.log({ key });
-        streamData[key] = streamInfo[key];
+
+    getHid((err, hid) => {
+      if (err) {
+        console.error({ err });
+        return;
       }
 
-      streamData.save(error => {
+      console.log("get hid:", hid);
+      //console.log("streamHid: ", { streamHid });
+      Stream.find({ _id }, (error, result) => {
         if (error) {
+          console.error(error);
           res.send({ state: "NG", error });
           return;
         }
-        res.send({ state: "OK" });
+        console.log({ result, _id });
+        if (result.length === 0) {
+          console.log("should add new record");
+          let streamData = new Stream();
+          streamData._id = _id;
+          for (const key in streamInfo) {
+            console.log({ key });
+            streamData[key] = streamInfo[key];
+          }
+          if (hid) {
+            streamData.hid = hid;
+          }
+
+          streamData.save(error => {
+            if (error) {
+              res.send({ state: "NG", error });
+              return;
+            }
+            res.send({ state: "OK" });
+          });
+          return;
+        }
       });
-      return;
-    }
-    console.log("should update record, result: ", result);
-    Stream.update({ _id }, { $set: streamInfo }, {}, (error, numReplaced) => {
-      if (error) {
-        res.send({ state: "NG", error });
-        return;
-      }
-      console.log("updated");
-      res.send({ state: "OK" });
+      //_id = "e3f3408d-6f8b-430c-926b-3e7e8a5f2aec";
     });
-  });
+
+    // console.log("should update record, result: ", result);
+    // Stream.update({ _id }, { $set: streamInfo }, {}, (error, numReplaced) => {
+    //   if (error) {
+    //     res.send({ state: "NG", error });
+    //     return;
+    //   }
+    //   console.log("updated");
+    //   res.send({ state: "OK" });
+    // });
+  }
 });
 
 router.post("/setupStream", (req, res) => {

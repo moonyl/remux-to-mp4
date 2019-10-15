@@ -1,15 +1,7 @@
 import React from "react";
-import {
-  Table,
-  TableBody,
-  TableRow,
-  TableCell,
-  Checkbox,
-  TableHead,
-  TableSortLabel,
-  Fab
-} from "@material-ui/core";
+import { Table, TableBody, TableRow, TableCell, Checkbox, Fab } from "@material-ui/core";
 import EditIcon from "@material-ui/icons/Edit";
+import StreamTableHead from "./libs/StreamTableHead";
 
 const headRows = [
   { id: "title", numeric: false, disablePadding: false, label: "이름" },
@@ -18,30 +10,11 @@ const headRows = [
   { id: "edit", numeric: false, disablePadding: false, label: "편집" }
 ];
 
-const StreamTableHead = props => (
-  <TableHead>
-    <TableRow>
-      <TableCell padding="checkbox">
-        <Checkbox />
-      </TableCell>
-      {headRows.map(row => (
-        <TableCell
-          key={row.id}
-          align={row.numeric ? "right" : "left"}
-          padding={row.disablePadding ? "none" : "default"}
-        >
-          <TableSortLabel>{row.label}</TableSortLabel>
-        </TableCell>
-      ))}
-    </TableRow>
-  </TableHead>
-);
-
 const StreamsTable = ({ streams, onSelectChange, onEdit }) => {
   //console.log({ streams });
   return (
     <Table>
-      <StreamTableHead />
+      <StreamTableHead headRows={headRows} checkbox={true} />
       <TableBody>
         {streams &&
           streams.map((stream, index) => (

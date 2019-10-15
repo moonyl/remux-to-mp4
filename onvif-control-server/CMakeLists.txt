@@ -121,9 +121,13 @@ target_include_directories(onvifkit PRIVATE ${CMAKE_SOURCE_DIR}/refs/onvifkit)
 # 이 프로젝트의 실행 파일에 소스를 추가합니다.
 add_executable (onvif_control_server 
 	main.cpp
-	OnvifDeviceScanner.h
 	OnvifDeviceScanner.cpp
-	OnvifDiscoveryHandler.h
-	OnvifDiscoveryService.h)
+	OnvifDeviceScanner.h
+	OnvifDiscoveryService.h
+	onvifHandlers.cpp
+	onvifHandlers.h
+	OnvifRequestProcessor.cpp
+	OnvifRequestProcessor.h
+	utils.h)
 target_link_libraries(onvif_control_server PRIVATE networkkit onvifkit)
 target_include_directories(onvif_control_server PRIVATE ${CMAKE_SOURCE_DIR}/refs)

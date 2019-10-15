@@ -25,7 +25,9 @@ const AudioSelect = ({ select, onSelect, displayInfos }) => {
         <MenuItem value={0}>오디오 끄기</MenuItem>
         {displayInfos &&
           displayInfos.map(displayInfo => (
-            <MenuItem value={displayInfo.id}>{displayInfo.title}</MenuItem>
+            <MenuItem key={displayInfo.id} value={displayInfo.id}>
+              {displayInfo.title}
+            </MenuItem>
           ))}
       </Select>
     </FormControl>

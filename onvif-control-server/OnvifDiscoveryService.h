@@ -1,14 +1,13 @@
 #pragma once
 
-#include <QLocalServer>
 #include <basekit/Exception.h>
-#include "OnvifDiscoveryHandler.h"
+#include "OnvifRequestProcessor.h"
 
 class OnvifDiscoveryService
 {
 	QLocalServer _server;
 	OnvifDeviceScanner _scanner;
-	QSet<OnvifDiscoveryClientHandler*> _handlers;
+	QSet<OnvifRequestProcessor*> _handlers;
 	
 public:
 	OnvifDiscoveryService()
@@ -30,7 +29,7 @@ private:
 		QObject::connect(&_server, &QLocalServer::newConnection, [this]()
 		{
 			QLocalSocket* client = _server.nextPendingConnection();
-			auto handler = new OnvifDiscoveryClientHandler(client, _scanner);
+			auto handler = new OnvifRequestProcessor(client, _scanner);
 			std::cout << "before: " << handler << std::endl;
 
 			handler->setHandleDone([handler, this]()
@@ -40,12 +39,7 @@ private:
 				//handler->deleteLater();
 				delete handler;
 			});
-			// QObject::connect(handler, &OnvifDiscoveryClientHandler::handleDone, [handler, this]()
-			// {
-			// 	std::cout << "after: " << handler << std::endl;				
-			// 	_handlers.remove(handler);
-			// 	handler->deleteLater();
-			// });
+
 			_handlers << handler;
 		});
 	}

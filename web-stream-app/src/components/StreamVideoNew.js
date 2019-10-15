@@ -133,10 +133,6 @@ const keepAlive = ws => {
 class StreamVideoNew extends React.Component {
   buffer = [];
 
-  // componentDidMount() {
-  //   console.log("componentDidMount");
-  // }
-
   componentWillUnmount() {
     console.log("componentWillUnmount", this.props.path);
 
@@ -148,7 +144,6 @@ class StreamVideoNew extends React.Component {
   }
 
   onReady = player => {
-    //console.log("check, onReady");
     const { path } = this.props;
     this.videoElement = document.querySelector(`#${player.id()} video`);
     this.configWebSocket(path);
@@ -176,6 +171,7 @@ class StreamVideoNew extends React.Component {
       }
       //console.log("disconnected check");
 
+      //console.log("check, handle message");
       handleSourceBuffer(this.sourceBuffer, this.buffer, data, this.appendSourceBuffer);
       doFlowContrl(this.sourceBuffer, this.videoElement);
     } else {
