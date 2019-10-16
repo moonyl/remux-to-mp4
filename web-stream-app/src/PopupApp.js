@@ -11,7 +11,8 @@ const styles = theme => ({
 
 class PopupApp extends React.Component {
   state = {
-    streamId: ""
+    streamId: "",
+    ptz: false
   };
   componentDidMount() {
     const { hid } = this.props.match.params;
@@ -24,8 +25,10 @@ class PopupApp extends React.Component {
       .then(result => {
         const { state, result: value } = result;
         if (state === "OK") {
-          const { id } = value;
-          this.setState({ streamId: id });
+          console.log({ value });
+          const { id, ptz } = value;
+          console.log({ ptz });
+          this.setState({ streamId: id, ptz });
         }
       })
       .catch(error => {
@@ -35,10 +38,10 @@ class PopupApp extends React.Component {
 
   render() {
     const { classes } = this.props;
-    const { streamId } = this.state;
+    const { streamId, ptz } = this.state;
     return (
       <div className={classes.app}>
-        {streamId && <StreamVideoNew path={`livews/${streamId}`} volumeMute={false} />}
+        {streamId && <StreamVideoNew path={`livews/${streamId}`} volumeMute={false} ptz={ptz} />}
       </div>
     );
   }

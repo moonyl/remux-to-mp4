@@ -25,7 +25,8 @@ class StreamSetupApp extends React.Component {
       url: "",
       user: "",
       password: "",
-      profileSummmary: ""
+      profileSummmary: "",
+      ptz: false
     },
     profileLoading: false,
     streams: [],
@@ -136,7 +137,7 @@ class StreamSetupApp extends React.Component {
         console.log({ json });
         const { state, media, ptz } = json;
         const { streamInfo } = this.state;
-        const currentStream = { ...streamInfo };
+        const currentStream = { ...streamInfo, ptz };
         if (state === true) {
           //console.log({ currentStream });
           currentStream.profiles = media;

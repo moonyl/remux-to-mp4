@@ -28,7 +28,7 @@ class vjsControlButton extends vjsComponent {
       ReactDOM.unmountComponentAtNode(this.el());
     });
 
-    console.log("options: ", options);
+    //console.log("options: ", options);
     //this.addClass(control);
     this.controlText(control.text);
   }
@@ -77,8 +77,8 @@ vjsComponent.registerComponent("goHomeControlButton", goHomeControlButton);
 class VideoPlayerWithPtz extends React.Component {
   onReady = player => {
     const { controlBar } = player;
-    console.log({ controlBar });
-    console.log({ player });
+    //console.log({ controlBar });
+    //console.log({ player });
     //player.getComponent("Button");
     let index = player
       .getChild("controlBar")

@@ -19,11 +19,12 @@ router.get("/stream-id/:hid", (req, res) => {
       return;
     }
     //console.log({ result });
-    const { _id, title, type, url, user, password, service, profiles, profileSel } = result;
+    const { _id, ptz } = result;
     res.send({
       state: "OK",
       result: {
-        id: _id
+        id: _id,
+        ptz
       }
     });
   });
@@ -103,12 +104,24 @@ router.get("/stream", (req, res) => {
         service,
         profileSummary,
         profileSel,
-        hid
+        hid,
+        ptz
       } = item;
       //console.log(_id, title);
       return {
         streamId: _id,
-        streamInfo: { title, type, url, user, password, service, profileSummary, profileSel, hid }
+        streamInfo: {
+          title,
+          type,
+          url,
+          user,
+          password,
+          service,
+          profileSummary,
+          profileSel,
+          hid,
+          ptz
+        }
       };
     });
     res.send({ state: "OK", result: streams });

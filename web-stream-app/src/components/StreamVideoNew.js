@@ -359,18 +359,21 @@ class StreamVideoNew extends React.Component {
   };
   render() {
     // console.log("streamvideo: ", this.props.path);
-    const { volumeMute } = this.props;
+    const { volumeMute, ptz } = this.props;
     return (
       <>
-        {/* <VideoPlayer onReady={this.onReady} /> */}
-        <VideoPtzPlayer
-          onReady={this.onReady}
-          onZoomIn={this.checkZoom}
-          onZoomOut={this.checkZoom}
-          onPreset={this.checkClick}
-          onHomeSet={this.checkClick}
-          onHome={this.checkClick}
-        />
+        {ptz === true ? (
+          <VideoPtzPlayer
+            onReady={this.onReady}
+            onZoomIn={this.checkZoom}
+            onZoomOut={this.checkZoom}
+            onPreset={this.checkClick}
+            onHomeSet={this.checkClick}
+            onHome={this.checkClick}
+          />
+        ) : (
+          <VideoPlayer onReady={this.onReady} />
+        )}
         <VolumeMute on={volumeMute} video={this.videoElement} />
       </>
     );

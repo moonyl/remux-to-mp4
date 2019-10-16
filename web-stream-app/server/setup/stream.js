@@ -14,7 +14,8 @@ const Stream = new LinvoDB("Stream", {
   service: String,
   profileSummary: String,
   profileSel: Number,
-  hid: { type: String, unique: true }
+  hid: { type: String, unique: true },
+  ptz: Boolean
 });
 
 module.exports = Stream;

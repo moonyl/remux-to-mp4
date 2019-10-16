@@ -85,6 +85,7 @@ public:
 	{
 		std::cout << "localsocket valid: " << _setupClient->isValid() << std::endl;
 		if (!_setupClient->isValid()) {
+			//_setupClient->connectToServer(_connectName);
 			return false;
 		}
 		QUuid sid = QUuid::createUuid();
@@ -100,24 +101,62 @@ public:
 	}
 
 private:
+	void retryConnect()
+	{
+		_setupClient->close();			
+		QTimer::singleShot(3000, [this]()
+		{
+			std::cout << "retry connect" << std::endl;
+			//_setupClient->abort();
+			_setupClient.reset(new QLocalSocket);
+			setupSocket();
+			_setupClient->connectToServer(_connectName);
+		});	
+	}
+	
 	void setupSocket()
 	{
 		connect(_setupClient.get(), &QLocalSocket::connected, []()
 		{
 			std::cout << "ipc socket connected" << std::endl;
 		});
+		
+		connect(_setupClient.get(), QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::error), [this](QLocalSocket::LocalSocketError socketError)
+		{
+			if (socketError == QLocalSocket::ServerNotFoundError) {
+				std::cout << "maybe server restarted?, retry connect" << std::endl;
+				retryConnect();
+				// _setupClient->close();			
+				// QTimer::singleShot(3000, [this]()
+				// {
+				// 	std::cout << "retry connect" << std::endl;
+				// 	//_setupClient->abort();
+				// 	_setupClient.reset(new QLocalSocket);
+				// 	setupSocket();
+				// 	_setupClient->connectToServer(_connectName);
+				// });				
+			}
+			std::cout << "ipc error: "<< socketError << std::endl;
+		});
+
+		// connect(_setupClient.get(), &QLocalSocket::stateChanged, [](QLocalSocket::LocalSocketState socketState)
+		// {
+		// 	std::cout << "ipc state changed: "<< socketState << std::endl;
+		// });
+		
 		connect(_setupClient.get(), &QLocalSocket::disconnected, [this]()
 		{
 			std::cout << "ipc socket disconnected" << std::endl;
-			_setupClient->close();			
-			QTimer::singleShot(3000, [this]()
-			{
-				std::cout << "retry connect" << std::endl;
-				//_setupClient->abort();
-				_setupClient.reset(new QLocalSocket);
-				setupSocket();
-				_setupClient->connectToServer(_connectName);
-			});
+			// _setupClient->close();			
+			// QTimer::singleShot(3000, [this]()
+			// {
+			// 	std::cout << "retry connect" << std::endl;
+			// 	//_setupClient->abort();
+			// 	_setupClient.reset(new QLocalSocket);
+			// 	setupSocket();
+			// 	_setupClient->connectToServer(_connectName);
+			// });
+			retryConnect();
 		});
 		connect(_setupClient.get(), &QLocalSocket::readyRead, [this]()
 		{
