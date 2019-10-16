@@ -1,6 +1,7 @@
 import React from "react";
 import MP4Box from "mp4box";
 import VideoPlayer from "@moonyl/react-video-js-player";
+import VideoPtzPlayer from "./VideoPtzPlayer";
 //import { Button } from "@material-ui/core";
 
 const createWebSocket = (protocol, hostname, port, path) => {
@@ -350,12 +351,26 @@ class StreamVideoNew extends React.Component {
   //   console.log("increase, ", this.videoElement.currentTime);
   // };
 
+  checkClick = event => {
+    console.log("checkClick");
+  };
+  checkZoom = param => event => {
+    console.log("checkZoom");
+  };
   render() {
     // console.log("streamvideo: ", this.props.path);
     const { volumeMute } = this.props;
     return (
       <>
-        <VideoPlayer onReady={this.onReady} />
+        {/* <VideoPlayer onReady={this.onReady} /> */}
+        <VideoPtzPlayer
+          onReady={this.onReady}
+          onZoomIn={this.checkZoom}
+          onZoomOut={this.checkZoom}
+          onPreset={this.checkClick}
+          onHomeSet={this.checkClick}
+          onHome={this.checkClick}
+        />
         <VolumeMute on={volumeMute} video={this.videoElement} />
       </>
     );
